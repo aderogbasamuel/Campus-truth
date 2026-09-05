@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { friendlyError } from "@/lib/campus";
 
 export const Route = createFileRoute("/auth")({
@@ -76,13 +75,6 @@ function AuthPage() {
     onError: (error) => toast.error(friendlyError(error)),
   });
 
-  const google = useMutation({
-    mutationFn: async () => {
-      await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    },
-    onError: (error) => toast.error(friendlyError(error, "Google sign-in didn't work.")),
-  });
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="bg-primary px-6 pb-10 pt-12 text-primary-foreground">
@@ -106,21 +98,6 @@ function AuthPage() {
 
       <div className="mx-auto -mt-6 w-full max-w-md px-4 pb-16">
         <div className="surface-card p-5">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            disabled={google.isPending}
-            onClick={() => google.mutate()}
-          >
-            Continue with Google
-          </Button>
-          <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            or use your email
-            <span className="h-px flex-1 bg-border" />
-          </div>
-
           <form
             className="space-y-4"
             onSubmit={(event) => {
