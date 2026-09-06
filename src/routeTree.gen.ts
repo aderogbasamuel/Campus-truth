@@ -12,8 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAskRouteImport } from './routes/_authenticated/ask'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedQaIndexRouteImport } from './routes/_authenticated/qa.index'
+import { Route as AuthenticatedUpdatesIndexRouteImport } from './routes/_authenticated/updates.index'
+import { Route as AuthenticatedUpdatesIdRouteImport } from './routes/_authenticated/updates.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,6 +33,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAskRoute = AuthenticatedAskRouteImport.update({
+  id: '/ask',
+  path: '/ask',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -39,39 +48,87 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedQaIndexRoute = AuthenticatedQaIndexRouteImport.update({
+  id: '/qa/',
+  path: '/qa/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedUpdatesIndexRoute =
+  AuthenticatedUpdatesIndexRouteImport.update({
+    id: '/updates/',
+    path: '/updates/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedUpdatesIdRoute = AuthenticatedUpdatesIdRouteImport.update({
+  id: '/updates/$id',
+  path: '/updates/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ask': typeof AuthenticatedAskRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/updates/$id': typeof AuthenticatedUpdatesIdRoute
+  '/qa/': typeof AuthenticatedQaIndexRoute
+  '/updates/': typeof AuthenticatedUpdatesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ask': typeof AuthenticatedAskRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/updates/$id': typeof AuthenticatedUpdatesIdRoute
+  '/qa': typeof AuthenticatedQaIndexRoute
+  '/updates': typeof AuthenticatedUpdatesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/ask': typeof AuthenticatedAskRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/updates/$id': typeof AuthenticatedUpdatesIdRoute
+  '/_authenticated/qa/': typeof AuthenticatedQaIndexRoute
+  '/_authenticated/updates/': typeof AuthenticatedUpdatesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/home' | '/onboarding'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/ask'
+    | '/home'
+    | '/onboarding'
+    | '/updates/$id'
+    | '/qa/'
+    | '/updates/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/home' | '/onboarding'
+  to:
+    | '/'
+    | '/auth'
+    | '/ask'
+    | '/home'
+    | '/onboarding'
+    | '/updates/$id'
+    | '/qa'
+    | '/updates'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/ask'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
+    | '/_authenticated/updates/$id'
+    | '/_authenticated/qa/'
+    | '/_authenticated/updates/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -103,6 +160,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/ask': {
+      id: '/_authenticated/ask'
+      path: '/ask'
+      fullPath: '/ask'
+      preLoaderRoute: typeof AuthenticatedAskRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/home': {
       id: '/_authenticated/home'
       path: '/home'
@@ -117,17 +181,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/qa/': {
+      id: '/_authenticated/qa/'
+      path: '/qa'
+      fullPath: '/qa/'
+      preLoaderRoute: typeof AuthenticatedQaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/updates/': {
+      id: '/_authenticated/updates/'
+      path: '/updates'
+      fullPath: '/updates/'
+      preLoaderRoute: typeof AuthenticatedUpdatesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/updates/$id': {
+      id: '/_authenticated/updates/$id'
+      path: '/updates/$id'
+      fullPath: '/updates/$id'
+      preLoaderRoute: typeof AuthenticatedUpdatesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAskRoute: typeof AuthenticatedAskRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedUpdatesIdRoute: typeof AuthenticatedUpdatesIdRoute
+  AuthenticatedQaIndexRoute: typeof AuthenticatedQaIndexRoute
+  AuthenticatedUpdatesIndexRoute: typeof AuthenticatedUpdatesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAskRoute: AuthenticatedAskRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedUpdatesIdRoute: AuthenticatedUpdatesIdRoute,
+  AuthenticatedQaIndexRoute: AuthenticatedQaIndexRoute,
+  AuthenticatedUpdatesIndexRoute: AuthenticatedUpdatesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
