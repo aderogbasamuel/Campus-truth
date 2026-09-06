@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAskRouteImport } from './routes/_authenticated/ask'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedQaIndexRouteImport } from './routes/_authenticated/qa.index'
 import { Route as AuthenticatedUpdatesIndexRouteImport } from './routes/_authenticated/updates.index'
 import { Route as AuthenticatedUpdatesIdRouteImport } from './routes/_authenticated/updates.$id'
 
@@ -47,6 +48,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedQaIndexRoute = AuthenticatedQaIndexRouteImport.update({
+  id: '/qa/',
+  path: '/qa/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedUpdatesIndexRoute =
   AuthenticatedUpdatesIndexRouteImport.update({
     id: '/updates/',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
+  '/qa/': typeof AuthenticatedQaIndexRoute
   '/updates/': typeof AuthenticatedUpdatesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
+  '/qa': typeof AuthenticatedQaIndexRoute
   '/updates': typeof AuthenticatedUpdatesIndexRoute
 }
 export interface FileRoutesById {
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/updates/$id': typeof AuthenticatedUpdatesIdRoute
+  '/_authenticated/qa/': typeof AuthenticatedQaIndexRoute
   '/_authenticated/updates/': typeof AuthenticatedUpdatesIndexRoute
 }
 export interface FileRouteTypes {
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/onboarding'
     | '/updates/$id'
+    | '/qa/'
     | '/updates/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/onboarding'
     | '/updates/$id'
+    | '/qa'
     | '/updates'
   id:
     | '__root__'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
     | '/_authenticated/updates/$id'
+    | '/_authenticated/qa/'
     | '/_authenticated/updates/'
   fileRoutesById: FileRoutesById
 }
@@ -169,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/qa/': {
+      id: '/_authenticated/qa/'
+      path: '/qa'
+      fullPath: '/qa/'
+      preLoaderRoute: typeof AuthenticatedQaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/updates/': {
       id: '/_authenticated/updates/'
       path: '/updates'
@@ -191,6 +210,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedUpdatesIdRoute: typeof AuthenticatedUpdatesIdRoute
+  AuthenticatedQaIndexRoute: typeof AuthenticatedQaIndexRoute
   AuthenticatedUpdatesIndexRoute: typeof AuthenticatedUpdatesIndexRoute
 }
 
@@ -199,6 +219,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedUpdatesIdRoute: AuthenticatedUpdatesIdRoute,
+  AuthenticatedQaIndexRoute: AuthenticatedQaIndexRoute,
   AuthenticatedUpdatesIndexRoute: AuthenticatedUpdatesIndexRoute,
 }
 
