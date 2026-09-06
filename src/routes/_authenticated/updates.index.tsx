@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { UNILAG_ID, timeAgo } from "@/lib/campus";
 
-export const Route = createFileRoute("/_authenticated/updates")({
+export const Route = createFileRoute("/_authenticated/updates/")({
   head: () => ({
     meta: [
       { title: "Campus updates — CampusTruth" },
