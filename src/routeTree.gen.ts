@@ -17,6 +17,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSavedRouteImport } from './routes/_authenticated/saved'
+import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedQaIndexRouteImport } from './routes/_authenticated/qa.index'
 import { Route as AuthenticatedQaIdRouteImport } from './routes/_authenticated/qa.$id'
 import { Route as AuthenticatedUpdatesIndexRouteImport } from './routes/_authenticated/updates.index'
@@ -62,6 +63,11 @@ const AuthenticatedSavedRoute = AuthenticatedSavedRouteImport.update({
   path: '/saved',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQaIndexRoute = AuthenticatedQaIndexRouteImport.update({
   id: '/qa/',
   path: '/qa/',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/saved': typeof AuthenticatedSavedRoute
+  '/search': typeof AuthenticatedSearchRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/qa/': typeof AuthenticatedQaIndexRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/saved': typeof AuthenticatedSavedRoute
+  '/search': typeof AuthenticatedSearchRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/qa': typeof AuthenticatedQaIndexRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/saved': typeof AuthenticatedSavedRoute
+  '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/qa/$id': typeof AuthenticatedQaIdRoute
   '/_authenticated/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/_authenticated/qa/': typeof AuthenticatedQaIndexRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/saved'
+    | '/search'
     | '/qa/$id'
     | '/updates/$id'
     | '/qa/'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/saved'
+    | '/search'
     | '/qa/$id'
     | '/updates/$id'
     | '/qa'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/onboarding'
     | '/_authenticated/saved'
+    | '/_authenticated/search'
     | '/_authenticated/qa/$id'
     | '/_authenticated/updates/$id'
     | '/_authenticated/qa/'
@@ -232,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSavedRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/search': {
+      id: '/_authenticated/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AuthenticatedSearchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/qa/': {
       id: '/_authenticated/qa/'
       path: '/qa'
@@ -269,6 +288,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSavedRoute: typeof AuthenticatedSavedRoute
+  AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedQaIdRoute: typeof AuthenticatedQaIdRoute
   AuthenticatedUpdatesIdRoute: typeof AuthenticatedUpdatesIdRoute
   AuthenticatedQaIndexRoute: typeof AuthenticatedQaIndexRoute
@@ -281,6 +301,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSavedRoute: AuthenticatedSavedRoute,
+  AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedQaIdRoute: AuthenticatedQaIdRoute,
   AuthenticatedUpdatesIdRoute: AuthenticatedUpdatesIdRoute,
   AuthenticatedQaIndexRoute: AuthenticatedQaIndexRoute,
