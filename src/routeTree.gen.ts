@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAskRouteImport } from './routes/_authenticated/ask'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedSavedRouteImport } from './routes/_authenticated/saved'
 import { Route as AuthenticatedQaIndexRouteImport } from './routes/_authenticated/qa.index'
 import { Route as AuthenticatedQaIdRouteImport } from './routes/_authenticated/qa.$id'
 import { Route as AuthenticatedUpdatesIndexRouteImport } from './routes/_authenticated/updates.index'
@@ -49,6 +50,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSavedRoute = AuthenticatedSavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQaIndexRoute = AuthenticatedQaIndexRouteImport.update({
   id: '/qa/',
   path: '/qa/',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/ask': typeof AuthenticatedAskRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/saved': typeof AuthenticatedSavedRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/qa/': typeof AuthenticatedQaIndexRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/ask': typeof AuthenticatedAskRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/saved': typeof AuthenticatedSavedRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/qa': typeof AuthenticatedQaIndexRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/_authenticated/ask': typeof AuthenticatedAskRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/saved': typeof AuthenticatedSavedRoute
   '/_authenticated/qa/$id': typeof AuthenticatedQaIdRoute
   '/_authenticated/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/_authenticated/qa/': typeof AuthenticatedQaIndexRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/ask'
     | '/home'
     | '/onboarding'
+    | '/saved'
     | '/qa/$id'
     | '/updates/$id'
     | '/qa/'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/ask'
     | '/home'
     | '/onboarding'
+    | '/saved'
     | '/qa/$id'
     | '/updates/$id'
     | '/qa'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ask'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
+    | '/_authenticated/saved'
     | '/_authenticated/qa/$id'
     | '/_authenticated/updates/$id'
     | '/_authenticated/qa/'
@@ -193,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/saved': {
+      id: '/_authenticated/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof AuthenticatedSavedRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/qa/': {
       id: '/_authenticated/qa/'
       path: '/qa'
@@ -228,6 +247,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAskRoute: typeof AuthenticatedAskRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedSavedRoute: typeof AuthenticatedSavedRoute
   AuthenticatedQaIdRoute: typeof AuthenticatedQaIdRoute
   AuthenticatedUpdatesIdRoute: typeof AuthenticatedUpdatesIdRoute
   AuthenticatedQaIndexRoute: typeof AuthenticatedQaIndexRoute
@@ -238,6 +258,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAskRoute: AuthenticatedAskRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedSavedRoute: AuthenticatedSavedRoute,
   AuthenticatedQaIdRoute: AuthenticatedQaIdRoute,
   AuthenticatedUpdatesIdRoute: AuthenticatedUpdatesIdRoute,
   AuthenticatedQaIndexRoute: AuthenticatedQaIndexRoute,
