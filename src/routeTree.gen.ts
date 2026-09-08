@@ -14,11 +14,13 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAskRouteImport } from './routes/_authenticated/ask'
+import { Route as AuthenticatedCommunitiesRouteImport } from './routes/_authenticated/communities'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSavedRouteImport } from './routes/_authenticated/saved'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQaIndexRouteImport } from './routes/_authenticated/qa.index'
 import { Route as AuthenticatedQaIdRouteImport } from './routes/_authenticated/qa.$id'
 import { Route as AuthenticatedUpdatesIndexRouteImport } from './routes/_authenticated/updates.index'
@@ -48,6 +50,12 @@ const AuthenticatedAskRoute = AuthenticatedAskRouteImport.update({
   path: '/ask',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCommunitiesRoute =
+  AuthenticatedCommunitiesRouteImport.update({
+    id: '/communities',
+    path: '/communities',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -72,6 +80,11 @@ const AuthenticatedSavedRoute = AuthenticatedSavedRouteImport.update({
 const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedQaIndexRoute = AuthenticatedQaIndexRouteImport.update({
@@ -101,11 +114,13 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/ask': typeof AuthenticatedAskRoute
+  '/communities': typeof AuthenticatedCommunitiesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/saved': typeof AuthenticatedSavedRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/qa/': typeof AuthenticatedQaIndexRoute
@@ -116,11 +131,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/ask': typeof AuthenticatedAskRoute
+  '/communities': typeof AuthenticatedCommunitiesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/saved': typeof AuthenticatedSavedRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/qa': typeof AuthenticatedQaIndexRoute
@@ -133,11 +150,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/ask': typeof AuthenticatedAskRoute
+  '/_authenticated/communities': typeof AuthenticatedCommunitiesRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/saved': typeof AuthenticatedSavedRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/qa/$id': typeof AuthenticatedQaIdRoute
   '/_authenticated/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/_authenticated/qa/': typeof AuthenticatedQaIndexRoute
@@ -150,11 +169,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/ask'
+    | '/communities'
     | '/home'
     | '/notifications'
     | '/onboarding'
     | '/saved'
     | '/search'
+    | '/settings'
     | '/qa/$id'
     | '/updates/$id'
     | '/qa/'
@@ -165,11 +186,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/ask'
+    | '/communities'
     | '/home'
     | '/notifications'
     | '/onboarding'
     | '/saved'
     | '/search'
+    | '/settings'
     | '/qa/$id'
     | '/updates/$id'
     | '/qa'
@@ -181,11 +204,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/admin'
     | '/_authenticated/ask'
+    | '/_authenticated/communities'
     | '/_authenticated/home'
     | '/_authenticated/notifications'
     | '/_authenticated/onboarding'
     | '/_authenticated/saved'
     | '/_authenticated/search'
+    | '/_authenticated/settings'
     | '/_authenticated/qa/$id'
     | '/_authenticated/updates/$id'
     | '/_authenticated/qa/'
@@ -235,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAskRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/communities': {
+      id: '/_authenticated/communities'
+      path: '/communities'
+      fullPath: '/communities'
+      preLoaderRoute: typeof AuthenticatedCommunitiesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/home': {
       id: '/_authenticated/home'
       path: '/home'
@@ -268,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof AuthenticatedSearchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/qa/': {
@@ -304,11 +343,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAskRoute: typeof AuthenticatedAskRoute
+  AuthenticatedCommunitiesRoute: typeof AuthenticatedCommunitiesRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSavedRoute: typeof AuthenticatedSavedRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedQaIdRoute: typeof AuthenticatedQaIdRoute
   AuthenticatedUpdatesIdRoute: typeof AuthenticatedUpdatesIdRoute
   AuthenticatedQaIndexRoute: typeof AuthenticatedQaIndexRoute
@@ -318,11 +359,13 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAskRoute: AuthenticatedAskRoute,
+  AuthenticatedCommunitiesRoute: AuthenticatedCommunitiesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSavedRoute: AuthenticatedSavedRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedQaIdRoute: AuthenticatedQaIdRoute,
   AuthenticatedUpdatesIdRoute: AuthenticatedUpdatesIdRoute,
   AuthenticatedQaIndexRoute: AuthenticatedQaIndexRoute,
