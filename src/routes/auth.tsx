@@ -75,6 +75,22 @@ function AuthPage() {
     onError: (error) => toast.error(friendlyError(error)),
   });
 
+  const google = useMutation({
+    mutationFn: async () => {
+      const { lovable } = await import("@/integrations/lovable/index");
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) throw result.error;
+      return result;
+    },
+    onSuccess: (result) => {
+      if (result.redirected) return;
+      navigate({ to: "/home", replace: true });
+    },
+    onError: (error) => toast.error(friendlyError(error)),
+  });
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="bg-primary px-6 pb-10 pt-12 text-primary-foreground">
@@ -144,6 +160,22 @@ function AuthPage() {
               {submit.isPending ? "Please wait…" : isLogin ? "Sign in" : "Create account"}
             </Button>
           </form>
+
+          <div className="my-5 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">or</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={google.isPending}
+            onClick={() => google.mutate()}
+          >
+            {google.isPending ? "Opening Google…" : "Continue with Google"}
+          </Button>
 
           <p className="mt-5 text-center text-sm text-muted-foreground">
             {isLogin ? "New to CampusTruth?" : "Already have an account?"}{" "}
