@@ -3,9 +3,9 @@ import { initialsOf } from "@/lib/campus";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  name?: string | null;
-  url?: string | null;
-  className?: string;
+  name?: string | null | undefined;
+  url?: string | null | undefined;
+  className?: string | undefined;
 };
 
 export function UserAvatar({ name, url, className }: Props) {
