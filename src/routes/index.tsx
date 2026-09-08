@@ -90,7 +90,9 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Button asChild size="lg" className="w-full bg-lime text-lime-foreground hover:bg-lime/90 sm:w-auto">
-              <Link to="/auth">Get started</Link>
+              <Link to="/auth" search={{ mode: "signup" }}>
+                Get started
+              </Link>
             </Button>
             <Button
               asChild
@@ -131,7 +133,9 @@ function Landing() {
             </p>
           </div>
           <Button asChild size="lg">
-            <Link to="/auth">Create free account</Link>
+            <Link to="/auth" search={{ mode: "signup" }}>
+              Create free account
+            </Link>
           </Button>
         </div>
       </section>

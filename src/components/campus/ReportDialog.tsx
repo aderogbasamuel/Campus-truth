@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { friendlyError } from "@/lib/campus";
 
-const REASONS = [
+const REASONS: string[] = [
   "Spam",
   "Harassment",
   "False information",
@@ -32,12 +32,19 @@ export function ReportDialog({
   targetId,
   children,
 }: {
-  targetType: "post" | "comment" | "question" | "answer" | "user" | "ai_answer";
+  targetType:
+    | "post"
+    | "comment"
+    | "question"
+    | "answer"
+    | "user"
+    | "ai_answer"
+    | "announcement";
   targetId: string;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState(REASONS[0]);
+  const [reason, setReason] = useState<string>(REASONS[0] ?? "Other");
   const [details, setDetails] = useState("");
 
   const submit = useMutation({

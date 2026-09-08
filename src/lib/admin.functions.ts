@@ -85,9 +85,9 @@ export const moderatePost = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, boolean> = {};
-    if (typeof data.removed === "boolean") patch['removed'] = data.removed;
-    if (typeof data.verified === "boolean") patch['verified'] = data.verified;
+    const patch: { removed?: boolean; verified?: boolean } = {};
+    if (typeof data.removed === "boolean") patch.removed = data.removed;
+    if (typeof data.verified === "boolean") patch.verified = data.verified;
     const { error } = await supabaseAdmin.from("posts").update(patch).eq("id", data.id);
     if (error) throw new Error("We couldn't update that post.");
     return { ok: true };
