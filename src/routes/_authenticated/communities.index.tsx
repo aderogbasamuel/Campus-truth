@@ -11,7 +11,7 @@ import { useSessionUser } from "@/hooks/useCampusUser";
 import { supabase } from "@/integrations/supabase/client";
 import { friendlyError } from "@/lib/campus";
 
-export const Route = createFileRoute("/_authenticated/communities")({
+export const Route = createFileRoute("/_authenticated/communities/")({
   head: () => ({
     meta: [
       { title: "Communities — CampusTruth" },
