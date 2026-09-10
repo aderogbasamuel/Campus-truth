@@ -89,6 +89,15 @@ export function friendlyError(error: unknown, fallback = "Something went wrong. 
   if (message.toLowerCase().includes("invalid login credentials")) {
     return "That email and password don't match. Please try again.";
   }
+  if (message.toLowerCase().includes("weak") || message.toLowerCase().includes("pwned")) {
+    return "That password is too easy to guess. Try a longer one with letters and numbers.";
+  }
+  if (message.toLowerCase().includes("email not confirmed")) {
+    return "Your email isn't confirmed yet. Try signing up again to get straight in.";
+  }
+  if (message.toLowerCase().includes("already registered")) {
+    return "That email already has an account. Sign in instead.";
+  }
   if (message.length > 160) return fallback;
   return message;
 }
