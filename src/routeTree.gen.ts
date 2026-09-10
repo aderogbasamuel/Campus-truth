@@ -21,6 +21,7 @@ import { Route as AuthenticatedSavedRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedCommunitiesIndexRouteImport } from './routes/_authenticated/communities.index'
+import { Route as AuthenticatedCommunitiesIdRouteImport } from './routes/_authenticated/communities.$id'
 import { Route as AuthenticatedQaIndexRouteImport } from './routes/_authenticated/qa.index'
 import { Route as AuthenticatedQaIdRouteImport } from './routes/_authenticated/qa.$id'
 import { Route as AuthenticatedUpdatesIndexRouteImport } from './routes/_authenticated/updates.index'
@@ -87,6 +88,12 @@ const AuthenticatedCommunitiesIndexRoute =
     path: '/communities/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCommunitiesIdRoute =
+  AuthenticatedCommunitiesIdRouteImport.update({
+    id: '/communities/$id',
+    path: '/communities/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedQaIndexRoute = AuthenticatedQaIndexRouteImport.update({
   id: '/qa/',
   path: '/qa/',
@@ -120,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/saved': typeof AuthenticatedSavedRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/communities/$id': typeof AuthenticatedCommunitiesIdRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/communities/': typeof AuthenticatedCommunitiesIndexRoute
@@ -137,6 +145,7 @@ export interface FileRoutesByTo {
   '/saved': typeof AuthenticatedSavedRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/communities/$id': typeof AuthenticatedCommunitiesIdRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/communities': typeof AuthenticatedCommunitiesIndexRoute
@@ -156,6 +165,7 @@ export interface FileRoutesById {
   '/_authenticated/saved': typeof AuthenticatedSavedRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/communities/$id': typeof AuthenticatedCommunitiesIdRoute
   '/_authenticated/qa/$id': typeof AuthenticatedQaIdRoute
   '/_authenticated/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/_authenticated/communities/': typeof AuthenticatedCommunitiesIndexRoute
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/settings'
+    | '/communities/$id'
     | '/qa/$id'
     | '/updates/$id'
     | '/communities/'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/settings'
+    | '/communities/$id'
     | '/qa/$id'
     | '/updates/$id'
     | '/communities'
@@ -210,6 +222,7 @@ export interface FileRouteTypes {
     | '/_authenticated/saved'
     | '/_authenticated/search'
     | '/_authenticated/settings'
+    | '/_authenticated/communities/$id'
     | '/_authenticated/qa/$id'
     | '/_authenticated/updates/$id'
     | '/_authenticated/communities/'
@@ -309,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCommunitiesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/communities/$id': {
+      id: '/_authenticated/communities/$id'
+      path: '/communities/$id'
+      fullPath: '/communities/$id'
+      preLoaderRoute: typeof AuthenticatedCommunitiesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/qa/': {
       id: '/_authenticated/qa/'
       path: '/qa'
@@ -349,6 +369,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSavedRoute: typeof AuthenticatedSavedRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedCommunitiesIdRoute: typeof AuthenticatedCommunitiesIdRoute
   AuthenticatedQaIdRoute: typeof AuthenticatedQaIdRoute
   AuthenticatedUpdatesIdRoute: typeof AuthenticatedUpdatesIdRoute
   AuthenticatedCommunitiesIndexRoute: typeof AuthenticatedCommunitiesIndexRoute
@@ -365,6 +386,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSavedRoute: AuthenticatedSavedRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedCommunitiesIdRoute: AuthenticatedCommunitiesIdRoute,
   AuthenticatedQaIdRoute: AuthenticatedQaIdRoute,
   AuthenticatedUpdatesIdRoute: AuthenticatedUpdatesIdRoute,
   AuthenticatedCommunitiesIndexRoute: AuthenticatedCommunitiesIndexRoute,
