@@ -22,6 +22,7 @@ import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedCommunitiesIndexRouteImport } from './routes/_authenticated/communities.index'
 import { Route as AuthenticatedCommunitiesIdRouteImport } from './routes/_authenticated/communities.$id'
+import { Route as AuthenticatedPostsIdRouteImport } from './routes/_authenticated/posts.$id'
 import { Route as AuthenticatedQaIndexRouteImport } from './routes/_authenticated/qa.index'
 import { Route as AuthenticatedQaIdRouteImport } from './routes/_authenticated/qa.$id'
 import { Route as AuthenticatedUpdatesIndexRouteImport } from './routes/_authenticated/updates.index'
@@ -94,6 +95,11 @@ const AuthenticatedCommunitiesIdRoute =
     path: '/communities/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPostsIdRoute = AuthenticatedPostsIdRouteImport.update({
+  id: '/posts/$id',
+  path: '/posts/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQaIndexRoute = AuthenticatedQaIndexRouteImport.update({
   id: '/qa/',
   path: '/qa/',
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/communities/$id': typeof AuthenticatedCommunitiesIdRoute
+  '/posts/$id': typeof AuthenticatedPostsIdRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/communities/': typeof AuthenticatedCommunitiesIndexRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/communities/$id': typeof AuthenticatedCommunitiesIdRoute
+  '/posts/$id': typeof AuthenticatedPostsIdRoute
   '/qa/$id': typeof AuthenticatedQaIdRoute
   '/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/communities': typeof AuthenticatedCommunitiesIndexRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/communities/$id': typeof AuthenticatedCommunitiesIdRoute
+  '/_authenticated/posts/$id': typeof AuthenticatedPostsIdRoute
   '/_authenticated/qa/$id': typeof AuthenticatedQaIdRoute
   '/_authenticated/updates/$id': typeof AuthenticatedUpdatesIdRoute
   '/_authenticated/communities/': typeof AuthenticatedCommunitiesIndexRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/communities/$id'
+    | '/posts/$id'
     | '/qa/$id'
     | '/updates/$id'
     | '/communities/'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/communities/$id'
+    | '/posts/$id'
     | '/qa/$id'
     | '/updates/$id'
     | '/communities'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/_authenticated/search'
     | '/_authenticated/settings'
     | '/_authenticated/communities/$id'
+    | '/_authenticated/posts/$id'
     | '/_authenticated/qa/$id'
     | '/_authenticated/updates/$id'
     | '/_authenticated/communities/'
@@ -329,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCommunitiesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/posts/$id': {
+      id: '/_authenticated/posts/$id'
+      path: '/posts/$id'
+      fullPath: '/posts/$id'
+      preLoaderRoute: typeof AuthenticatedPostsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/qa/': {
       id: '/_authenticated/qa/'
       path: '/qa'
@@ -370,6 +389,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedCommunitiesIdRoute: typeof AuthenticatedCommunitiesIdRoute
+  AuthenticatedPostsIdRoute: typeof AuthenticatedPostsIdRoute
   AuthenticatedQaIdRoute: typeof AuthenticatedQaIdRoute
   AuthenticatedUpdatesIdRoute: typeof AuthenticatedUpdatesIdRoute
   AuthenticatedCommunitiesIndexRoute: typeof AuthenticatedCommunitiesIndexRoute
@@ -387,6 +407,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedCommunitiesIdRoute: AuthenticatedCommunitiesIdRoute,
+  AuthenticatedPostsIdRoute: AuthenticatedPostsIdRoute,
   AuthenticatedQaIdRoute: AuthenticatedQaIdRoute,
   AuthenticatedUpdatesIdRoute: AuthenticatedUpdatesIdRoute,
   AuthenticatedCommunitiesIndexRoute: AuthenticatedCommunitiesIndexRoute,
