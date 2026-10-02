@@ -44,6 +44,12 @@ function AuthPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) navigate({ to: "/home", replace: true });
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        navigate({ to: "/home", replace: true });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
   const submit = useMutation({
@@ -79,7 +85,7 @@ function AuthPage() {
     mutationFn: async () => {
       const { lovable } = await import("@/integrations/lovable/index");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/auth?mode=login`,
       });
       if (result.error) throw result.error;
       return result;
