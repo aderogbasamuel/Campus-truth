@@ -88,6 +88,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "answers_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "answers_question_id_fkey"
             columns: ["question_id"]
             isOneToOne: false
@@ -122,6 +129,13 @@ export type Database = {
           post_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "comments_parent_id_fkey"
             columns: ["parent_id"]
@@ -518,6 +532,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "posts_department_id_fkey"
             columns: ["department_id"]
             isOneToOne: false
@@ -651,6 +672,13 @@ export type Database = {
           views?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "questions_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "questions_department_id_fkey"
             columns: ["department_id"]
