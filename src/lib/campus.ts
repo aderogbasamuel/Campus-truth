@@ -87,7 +87,7 @@ export function friendlyError(error: unknown, fallback = "Something went wrong. 
   if (message.toLowerCase().includes("duplicate key")) return "That already exists.";
   if (message.toLowerCase().includes("row-level security")) return "You don't have access to do that.";
   if (message.toLowerCase().includes("invalid login credentials")) {
-    return "That email and password don't match. Please try again.";
+    return "That email and password don't match. If you joined with Google, tap “Continue with Google” instead.";
   }
   if (message.toLowerCase().includes("weak") || message.toLowerCase().includes("pwned")) {
     return "That password is too easy to guess. Try a longer one with letters and numbers.";
