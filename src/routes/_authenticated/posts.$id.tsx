@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/posts/$id")({
       },
     ],
   }),
-  component: PostDetailPage;
+  component: PostDetailPage,
 });
 
 function PostDetailPage() {
