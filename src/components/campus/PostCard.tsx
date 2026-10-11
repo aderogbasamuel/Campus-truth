@@ -115,23 +115,30 @@ export function PostCard({
       ? "course_rep"
       : "student";
 
+  const commentCount = post.comment_count ?? 0;
+
   return (
-    <article className="surface-card overflow-hidden">
+    // id makes the "Copy link" URL (/home#post-<id>) actually land on this post
+    <article
+      id={`post-${post.id}`}
+      className="scroll-mt-20 overflow-hidden rounded-3xl border border-primary/15 bg-white"
+    >
       <div className="flex items-start gap-3 p-4">
         <UserAvatar name={post.author?.full_name} url={post.author?.avatar_url} />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="truncate text-sm font-semibold">
               {post.author?.full_name ?? "CampusTruth student"}
             </span>
             <TrustBadge level={trust} />
-            <span className="text-xs text-muted-foreground">{timeAgo(post.created_at)}</span>
+            <span className="text-xs text-primary/60">{timeAgo(post.created_at)}</span>
           </div>
           {post.title ? <h3 className="mt-2 text-base font-semibold">{post.title}</h3> : null}
-          <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-foreground">
-            {post.content}
-          </p>
-          <Badge variant="secondary" className="mt-3 bg-lime-soft text-lime-foreground">
+          <p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{post.content}</p>
+          <Badge
+            variant="secondary"
+            className="mt-3 bg-muted font-medium text-primary/70 hover:bg-muted"
+          >
             {categoryLabel(post.category)}
           </Badge>
         </div>
@@ -146,28 +153,37 @@ export function PostCard({
         />
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-1 border-t border-border px-2 py-2">
+      <div className="flex flex-wrap items-center gap-1 border-t border-primary/10 px-2 py-2">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => toggleLike.mutate()}
+          disabled={toggleLike.isPending}
           aria-pressed={post.liked}
           aria-label="Like post"
         >
           <Heart className={post.liked ? "fill-destructive text-destructive" : ""} />
           {post.reaction_count ?? 0}
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => setShowComments((value) => !value)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowComments((value) => !value)}
+          aria-expanded={showComments}
+          aria-label={`${commentCount} comments`}
+        >
           <MessageCircle />
-          {post.comment_count ?? 0}
+          {commentCount}
         </Button>
         <Button
           variant="ghost"
           size="sm"
           aria-label="Copy link"
           onClick={() => {
-            void navigator.clipboard.writeText(`${window.location.origin}/home#post-${post.id}`);
-            toast.success("Link copied");
+            navigator.clipboard
+              .writeText(`${window.location.origin}/home#post-${post.id}`)
+              .then(() => toast.success("Link copied"))
+              .catch(() => toast.error("Couldn't copy the link"));
           }}
         >
           <Link2 />
@@ -177,6 +193,7 @@ export function PostCard({
           size="sm"
           aria-label="Save post"
           aria-pressed={post.saved}
+          disabled={toggleSave.isPending}
           onClick={() => toggleSave.mutate()}
         >
           <Bookmark className={post.saved ? "fill-primary text-primary" : ""} />
@@ -192,7 +209,12 @@ export function PostCard({
               variant="ghost"
               size="sm"
               aria-label="Delete post"
-              onClick={() => removePost.mutate()}
+              disabled={removePost.isPending}
+              onClick={() => {
+                if (window.confirm("Delete this post? This can't be undone.")) {
+                  removePost.mutate();
+                }
+              }}
             >
               <Trash2 />
             </Button>

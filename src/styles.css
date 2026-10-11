@@ -68,7 +68,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.3 0.028 168);
   /* --primary: oklch(0.34 0.031 168); */
-  --primary: #191A23;
+  --primary: #19231b;
   --primary-foreground: oklch(0.975 0.06 110);
   --secondary: oklch(0.955 0.02 110);
   --secondary-foreground: oklch(0.34 0.031 168);
@@ -168,4 +168,11 @@
     oklch(0.3 0.028 168) 55%,
     oklch(0.38 0.03 160) 100%
   );
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }

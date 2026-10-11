@@ -118,20 +118,16 @@ function AuthPage() {
   });
 
   const google = useMutation({
-    mutationFn: async () => {
-      const { lovable } = await import("@/integrations/lovable/index");
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth?mode=login`,
-      });
-      if (result.error) throw result.error;
-      return result;
-    },
-    onSuccess: (result) => {
-      if (result.redirected) return;
-      navigate({ to: "/home", replace: true });
-    },
-    onError: (error) => toast.error(friendlyError(error)),
-  });
+  mutationFn: async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth?mode=login` },
+    });
+    if (error) throw error;
+    // the browser redirects to Google here, so no onSuccess navigation
+  },
+  onError: (error) => toast.error(friendlyError(error)),
+});
 
   const busy = submit.isPending || google.isPending;
 

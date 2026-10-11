@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 
 export type TrustLevel = "official" | "verified" | "course_rep" | "student";
 
+// `accent` is the lime, so Verified owns it. Course Rep gets a primary tint
+// instead, otherwise the two badges would look identical.
 const CONFIG: Record<TrustLevel, { label: string; icon: typeof BadgeCheck; className: string }> = {
   official: {
     label: "Official",
@@ -13,17 +15,17 @@ const CONFIG: Record<TrustLevel, { label: string; icon: typeof BadgeCheck; class
   verified: {
     label: "Verified",
     icon: BadgeCheck,
-    className: "bg-lime text-lime-foreground",
+    className: "bg-accent text-accent-foreground",
   },
   course_rep: {
     label: "Course Rep",
     icon: GraduationCap,
-    className: "bg-accent text-accent-foreground border border-border",
+    className: "border border-primary/25 bg-primary/10 text-primary",
   },
   student: {
     label: "Student",
     icon: Users,
-    className: "bg-muted text-muted-foreground",
+    className: "bg-muted text-primary/70",
   },
 };
 
@@ -33,12 +35,12 @@ export function TrustBadge({ level, className }: { level: TrustLevel; className?
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium",
         config.className,
         className,
       )}
     >
-      <Icon className="size-3" aria-hidden="true" />
+      <Icon className="size-3.5" aria-hidden="true" />
       {config.label}
     </span>
   );
