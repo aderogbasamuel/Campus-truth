@@ -1,13 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, Bookmark, ExternalLink, Link2, Newspaper } from "lucide-react";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Bookmark,
+  ExternalLink,
+  Link2,
+  Loader2,
+  Newspaper,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/campus/AppShell";
 import { EmptyState } from "@/components/campus/EmptyState";
 import { ReportDialog } from "@/components/campus/ReportDialog";
 import { TrustBadge } from "@/components/campus/TrustBadge";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSessionUser } from "@/hooks/useCampusUser";
@@ -31,6 +38,8 @@ export const Route = createFileRoute("/_authenticated/updates/$id")({
   }),
   component: UpdateDetail,
 });
+
+const CARD = "rounded-3xl border border-primary/15 bg-white p-5 sm:p-6";
 
 function UpdateDetail() {
   const { id } = Route.useParams();
@@ -91,14 +100,14 @@ function UpdateDetail() {
       <div className="mx-auto max-w-2xl">
         <Link
           to="/updates"
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-primary/70 hover:text-primary"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           All campus updates
         </Link>
 
         {update.isLoading ? (
-          <div className="surface-card space-y-3 p-5">
+          <div className={`${CARD} space-y-3`}>
             <Skeleton className="h-5 w-24" />
             <Skeleton className="h-7 w-3/4" />
             <Skeleton className="h-4 w-full" />
@@ -106,35 +115,44 @@ function UpdateDetail() {
             <Skeleton className="h-4 w-2/3" />
           </div>
         ) : update.data ? (
-          <article className="surface-card p-5">
-            <div className="flex flex-wrap items-center gap-2">
+          <article className={CARD}>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
               <TrustBadge level={update.data.verified ? "official" : "student"} />
               {update.data.confidence ? (
-                <Badge variant="secondary" className="bg-lime-soft text-lime-foreground">
+                <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-medium tabular-nums text-accent-foreground">
                   {update.data.confidence}% confidence
-                </Badge>
+                </span>
               ) : null}
-              <span className="text-xs text-muted-foreground">
-                {update.data.published_at
-                  ? new Date(update.data.published_at).toLocaleDateString(undefined, {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })
-                  : ""}
-              </span>
+              {update.data.published_at ? (
+                <time
+                  dateTime={update.data.published_at}
+                  className="text-sm text-primary/60"
+                >
+                  {new Date(update.data.published_at).toLocaleDateString(undefined, {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </time>
+              ) : null}
             </div>
 
-            <h1 className="mt-3 text-2xl font-bold leading-snug">{update.data.title}</h1>
-            <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-foreground">
+            <h1 className="mt-4 text-2xl font-semibold leading-snug tracking-tight sm:text-3xl">
+              {update.data.title}
+            </h1>
+            <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-primary/80">
               {update.data.content}
             </p>
 
-            <div className="mt-5 rounded-2xl bg-secondary p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {/* the proof: this is the point of the whole product, so it gets real weight */}
+            <div className="mt-6 rounded-2xl border border-primary/15 bg-muted p-4">
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <span className="flex size-6 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                  <BadgeCheck className="size-3.5" aria-hidden="true" />
+                </span>
                 Where this came from
               </p>
-              <p className="mt-1 text-sm font-medium">
+              <p className="mt-2 text-sm font-medium">
                 {update.data.source_name ?? "CampusTruth verification team"}
               </p>
               {update.data.source_url ? (
@@ -142,39 +160,55 @@ function UpdateDetail() {
                   href={update.data.source_url}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline"
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline underline-offset-2"
                 >
                   Open the original source
                   <ExternalLink className="size-3.5" aria-hidden="true" />
+                  <span className="sr-only"> (opens in a new tab)</span>
                 </a>
               ) : (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  No public link yet — confirm with your department office if you need proof.
+                <p className="mt-2 text-sm text-primary/70">
+                  No public link yet. Confirm with your department office if you need proof.
                 </p>
               )}
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-2">
+            <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-primary/10 pt-5">
               <Button
-                variant="secondary"
+                variant={saved.data ? "default" : "outline"}
+                className={
+                  saved.data
+                    ? "rounded-full"
+                    : "rounded-full border-primary/20 bg-transparent hover:bg-primary/5"
+                }
+                disabled={toggleSave.isPending || saved.isLoading}
                 onClick={() => toggleSave.mutate()}
                 aria-pressed={!!saved.data}
               >
-                <Bookmark className={saved.data ? "fill-primary text-primary" : ""} />
+                {toggleSave.isPending ? (
+                  <Loader2 className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <Bookmark className={saved.data ? "fill-current" : ""} aria-hidden="true" />
+                )}
                 {saved.data ? "Saved" : "Save"}
               </Button>
               <Button
                 variant="ghost"
+                className="rounded-full"
                 onClick={() => {
-                  void navigator.clipboard.writeText(window.location.href);
-                  toast.success("Link copied");
+                  navigator.clipboard
+                    .writeText(window.location.href)
+                    .then(() => toast.success("Link copied"))
+                    .catch(() => toast.error("Couldn't copy the link"));
                 }}
               >
-                <Link2 />
+                <Link2 aria-hidden="true" />
                 Copy link
               </Button>
               <ReportDialog targetType="announcement" targetId={id}>
-                <Button variant="ghost">Report a problem</Button>
+                <Button variant="ghost" className="rounded-full">
+                  Report a problem
+                </Button>
               </ReportDialog>
             </div>
           </article>

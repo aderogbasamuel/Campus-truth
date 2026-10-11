@@ -204,15 +204,21 @@ export function PageHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <span className="h-6 w-1 rounded-full bg-primary" aria-hidden="true" />
-          {title}
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0">
+        {/* same highlighted-title treatment as the landing page cards */}
+        <h1 className="text-3xl font-semibold leading-[1.4] tracking-tight sm:text-4xl">
+          <span className="rounded-lg bg-accent px-2 text-accent-foreground [-webkit-box-decoration-break:clone] [box-decoration-break:clone]">
+            {title}
+          </span>
         </h1>
-        {description ? <p className="mt-1 text-sm text-primary/60">{description}</p> : null}
+        {description ? (
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-primary/70 sm:text-base">
+            {description}
+          </p>
+        ) : null}
       </div>
       {action}
-    </div>
+    </header>
   );
 }

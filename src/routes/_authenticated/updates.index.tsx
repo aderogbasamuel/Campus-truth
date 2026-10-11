@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ChevronRight, Newspaper, Search } from "lucide-react";
+import { ChevronRight, Newspaper, Search, X } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell, PageHeading } from "@/components/campus/AppShell";
 import { EmptyState } from "@/components/campus/EmptyState";
 import { CardSkeletonList } from "@/components/campus/LoadingSkeleton";
 import { TrustBadge } from "@/components/campus/TrustBadge";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { UNILAG_ID, timeAgo } from "@/lib/campus";
@@ -47,9 +47,11 @@ function UpdatesPage() {
     },
   });
 
+  const query = term.trim().toLowerCase();
   const filtered = (updates.data ?? []).filter((item) =>
-    `${item.title} ${item.content}`.toLowerCase().includes(term.trim().toLowerCase()),
+    `${item.title} ${item.content}`.toLowerCase().includes(query),
   );
+  const hasAny = (updates.data ?? []).length > 0;
 
   return (
     <AppShell>
@@ -59,9 +61,9 @@ function UpdatesPage() {
           description="Every update here is checked against an official source before it is published."
         />
 
-        <div className="relative mb-4">
+        <div className="relative mb-2">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-primary/60"
             aria-hidden="true"
           />
           <label htmlFor="updates-search" className="sr-only">
@@ -69,12 +71,30 @@ function UpdatesPage() {
           </label>
           <Input
             id="updates-search"
+            type="search"
             value={term}
             onChange={(event) => setTerm(event.target.value)}
             placeholder="Search fees, exams, registration…"
-            className="h-12 rounded-2xl bg-card pl-9"
+            className="h-12 rounded-full border-primary/20 bg-white pl-11 pr-11"
           />
+          {term ? (
+            <button
+              type="button"
+              onClick={() => setTerm("")}
+              aria-label="Clear search"
+              className="absolute right-1.5 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-primary/60 transition-colors hover:bg-primary/5 hover:text-primary"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          ) : null}
         </div>
+
+        {/* announced to screen readers as you type; hidden visually when not searching */}
+        <p className="mb-4 min-h-5 px-2 text-sm text-primary/60" aria-live="polite">
+          {query && !updates.isLoading && !updates.isError
+            ? `${filtered.length} ${filtered.length === 1 ? "update" : "updates"} found`
+            : ""}
+        </p>
 
         {updates.isLoading ? (
           <CardSkeletonList count={4} />
@@ -82,7 +102,8 @@ function UpdatesPage() {
           <EmptyState
             icon={Newspaper}
             title="We couldn't load campus updates"
-            description="Check your connection and refresh the page to try again."
+            description="Check your connection and try again."
+            action={<Button onClick={() => updates.refetch()}>Try again</Button>}
           />
         ) : filtered.length ? (
           <ul className="space-y-3">
@@ -91,43 +112,57 @@ function UpdatesPage() {
                 <Link
                   to="/updates/$id"
                   params={{ id: item.id }}
-                  className="surface-card flex items-start gap-3 p-4 transition-colors hover:bg-secondary/50"
+                  className="group flex items-start gap-3 rounded-3xl border border-primary/15 bg-white p-4 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-lime-soft text-primary">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
                     <Newspaper className="size-5" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2">
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
                       <TrustBadge level={item.verified ? "official" : "student"} />
-                      <span className="text-xs text-muted-foreground">
-                        {timeAgo(item.published_at)}
-                      </span>
                       {item.confidence ? (
-                        <Badge variant="secondary" className="bg-lime-soft text-lime-foreground">
+                        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium tabular-nums text-primary/70">
                           {item.confidence}% confidence
-                        </Badge>
+                        </span>
                       ) : null}
+                      <span className="text-sm text-primary/60">{timeAgo(item.published_at)}</span>
                     </span>
-                    <span className="mt-2 block font-semibold">{item.title}</span>
-                    <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">
+                    <span className="mt-2 block text-base font-semibold leading-snug">
+                      {item.title}
+                    </span>
+                    <span className="mt-1 line-clamp-2 block text-sm leading-relaxed text-primary/70">
                       {item.content}
                     </span>
                     {item.source_name ? (
-                      <span className="mt-2 block text-xs text-muted-foreground">
-                        Source: {item.source_name}
+                      <span className="mt-2 block text-sm text-primary/60">
+                        Source: <span className="font-medium">{item.source_name}</span>
                       </span>
                     ) : null}
                   </span>
-                  <ChevronRight className="mt-3 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <ChevronRight
+                    className="mt-3 size-4 shrink-0 text-primary/50 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
                 </Link>
               </li>
             ))}
           </ul>
-        ) : (
+        ) : hasAny ? (
           <EmptyState
             icon={Newspaper}
             title="No updates match that search"
-            description="Try a different word, or come back later — new verified updates arrive regularly."
+            description="Try a different word, or clear the search to see everything."
+            action={
+              <Button variant="outline" onClick={() => setTerm("")}>
+                Clear search
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={Newspaper}
+            title="No updates yet"
+            description="Verified announcements will show up here as soon as they're published."
           />
         )}
       </div>
