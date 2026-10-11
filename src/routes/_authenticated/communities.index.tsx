@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { Check, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 
-import { AppShell } from "@/components/campus/AppShell";
+import { AppShell, PageHeading } from "@/components/campus/AppShell";
 import { EmptyState } from "@/components/campus/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -86,37 +86,68 @@ function CommunitiesPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-2xl">
-        <h1 className="text-2xl font-bold">Communities</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Join the groups that match your faculty, department and level.
-        </p>
+        <PageHeading
+          title="Communities"
+          description="Join the groups that match your faculty, department and level."
+        />
 
         {communities.isLoading ? (
-          <div className="mt-5 space-y-3">
+          <div className="space-y-3">
             {[0, 1, 2].map((key) => (
-              <Skeleton key={key} className="h-24 w-full rounded-2xl" />
+              <Skeleton key={key} className="h-24 w-full rounded-3xl" />
             ))}
           </div>
+        ) : communities.isError ? (
+          <EmptyState
+            icon={Users}
+            title="We couldn't load communities"
+            description="Check your connection and try again."
+            action={<Button onClick={() => communities.refetch()}>Try again</Button>}
+          />
         ) : communities.data && communities.data.length > 0 ? (
-          <ul className="mt-5 space-y-3">
+          <ul className="space-y-3">
             {communities.data.map((community) => {
               const joined = memberships.data?.includes(community.id) ?? false;
+              // only the card being toggled shows a spinner; the rest stay usable
+              const busy = toggle.isPending && toggle.variables === community.id;
               return (
-                <li key={community.id} className="surface-card flex items-start gap-3 p-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-lime-soft text-primary">
+                <li
+                  key={community.id}
+                  className="flex items-start gap-3 rounded-3xl border border-primary/15 bg-white p-4"
+                >
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
                     <Users className="size-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-base font-semibold">{community.name}</h2>
+                    <h2 className="text-base font-semibold leading-snug">{community.name}</h2>
+                    {community.level ? (
+                      <span className="mt-1.5 inline-block rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-primary/70">
+                        {community.level} level
+                      </span>
+                    ) : null}
                     {community.description ? (
-                      <p className="mt-1 text-sm text-muted-foreground">{community.description}</p>
+                      <p className="mt-1.5 text-sm leading-relaxed text-primary/70">
+                        {community.description}
+                      </p>
                     ) : null}
                   </div>
                   <Button
-                    variant={joined ? "secondary" : "default"}
+                    variant={joined ? "outline" : "default"}
+                    className={
+                      joined
+                        ? "rounded-full border-primary/20 bg-transparent hover:bg-primary/5"
+                        : "rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
+                    }
                     onClick={() => toggle.mutate(community.id)}
-                    disabled={toggle.isPending}
+                    disabled={toggle.isPending || memberships.isLoading}
+                    aria-pressed={joined}
+                    aria-label={`${joined ? "Leave" : "Join"} ${community.name}`}
                   >
+                    {busy ? (
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    ) : joined ? (
+                      <Check className="size-4" aria-hidden="true" />
+                    ) : null}
                     {joined ? "Joined" : "Join"}
                   </Button>
                 </li>
