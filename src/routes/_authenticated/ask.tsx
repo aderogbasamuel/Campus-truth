@@ -1,19 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, ExternalLink, Send, Sparkles } from "lucide-react";
+import { BadgeCheck, Bot, ExternalLink, Loader2, Plus, Send, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/campus/AppShell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useCredits, useSessionUser } from "@/hooks/useCampusUser";
 import { supabase } from "@/integrations/supabase/client";
 import { askTrustBot } from "@/lib/ai.functions";
-import { friendlyError } from "@/lib/campus";
+import { friendlyError, timeAgo } from "@/lib/campus";
 
 export const Route = createFileRoute("/_authenticated/ask")({
   head: () => ({
@@ -56,6 +55,16 @@ type ChatMessage = {
   sources?: Source[] | null;
 };
 
+async function loadMessages(conversationId: string) {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id, role, content, sources")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as ChatMessage[];
+}
+
 function AskPage() {
   const { userId } = useSessionUser();
   const { data: credits } = useCredits(userId);
@@ -66,35 +75,49 @@ function AskPage() {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const messages = useQuery({
     queryKey: ["messages", conversationId],
     enabled: !!conversationId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("id, role, content, sources")
-        .eq("conversation_id", conversationId!)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as unknown as ChatMessage[];
-    },
+    queryFn: () => loadMessages(conversationId!),
   });
 
+  const history = messages.data ?? [];
+  const outOfCredits = credits !== undefined && credits <= 0;
+
+  // keep the newest message in view (and don't animate for people who asked us not to)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!messages.data?.length && !pending) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    bottomRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "end" });
   }, [messages.data, pending]);
+
+  // the input grows with what you type, up to a limit
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [draft]);
 
   const send = useMutation({
     mutationFn: async (question: string) => {
       setPending(question);
       return ask({ data: { question, conversationId } });
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
+      // Load the saved messages BEFORE clearing the pending bubble, so the
+      // question never blinks out between the answer arriving and the list refreshing.
+      await queryClient
+        .fetchQuery({
+          queryKey: ["messages", result.conversationId],
+          queryFn: () => loadMessages(result.conversationId),
+        })
+        .catch(() => undefined);
       setPending(null);
       setDraft("");
       setConversationId(result.conversationId);
-      queryClient.invalidateQueries({ queryKey: ["messages", result.conversationId] });
       queryClient.invalidateQueries({ queryKey: ["credits"] });
     },
     onError: (error) => {
@@ -112,34 +135,64 @@ function AskPage() {
     send.mutate(value);
   };
 
-  const history = messages.data ?? [];
+  const canSend = !send.isPending && !outOfCredits && draft.trim().length > 0;
+
+  const startNewChat = () => {
+    setConversationId(null);
+    setDraft("");
+    inputRef.current?.focus();
+  };
 
   return (
     <AppShell>
       <div className="mx-auto flex max-w-2xl flex-col">
-        <header className="surface-card mb-4 flex items-center gap-3 p-4">
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-lime text-lime-foreground">
+        {/* identity + credits */}
+        <header className="relative mb-4 flex flex-wrap items-center gap-3 overflow-hidden rounded-3xl bg-primary p-4 text-primary-foreground">
+          <BadgeCheck
+            aria-hidden="true"
+            strokeWidth={1}
+            className="pointer-events-none absolute -bottom-6 -right-3 size-28 text-accent/15"
+          />
+          <span className="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
             <Bot className="size-5" aria-hidden="true" />
           </span>
-          <div className="min-w-0">
-            <h1 className="text-lg font-bold">TrustBot</h1>
-            <p className="text-xs text-muted-foreground">
-              Answers only from verified campus records — never guesses.
+          <div className="relative min-w-0 flex-1">
+            <h1 className="text-lg font-semibold tracking-tight">TrustBot</h1>
+            <p className="text-sm text-primary-foreground/75">
+              Answers only from verified campus records. Never guesses.
             </p>
           </div>
-          <Badge variant="secondary" className="ml-auto bg-lime-soft text-lime-foreground">
+          <span className="relative shrink-0 rounded-full bg-accent px-3 py-1 text-xs font-medium tabular-nums text-accent-foreground">
             {credits ?? 0} credits
-          </Badge>
+          </span>
         </header>
 
-        <div className="space-y-4">
+        {history.length > 0 ? (
+          <div className="mb-3 flex justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-full border-primary/20 bg-transparent hover:bg-primary/5"
+              onClick={startNewChat}
+              disabled={send.isPending}
+            >
+              <Plus aria-hidden="true" />
+              New chat
+            </Button>
+          </div>
+        ) : null}
+
+        <div role="log" aria-label="Conversation with TrustBot" className="space-y-4">
           {history.length === 0 && !pending ? (
-            <div className="surface-card p-5">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-lime-soft text-primary">
+            <section className="rounded-3xl border border-primary/15 bg-white p-5 sm:p-6">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
                 <Sparkles className="size-5" aria-hidden="true" />
               </span>
-              <h2 className="mt-3 text-base font-semibold">What would you like to know?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <h2 className="mt-3 text-lg font-semibold tracking-tight">
+                What would you like to know?
+              </h2>
+              <p className="mt-1 text-sm leading-relaxed text-primary/70">
                 Campus updates and browsing are always free. Each TrustBot answer uses one credit.
               </p>
               <ul className="mt-4 space-y-2">
@@ -147,57 +200,94 @@ function AskPage() {
                   <li key={item}>
                     <button
                       type="button"
+                      disabled={send.isPending || outOfCredits}
                       onClick={() => submit(item)}
-                      className="w-full rounded-2xl bg-secondary px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-lime-soft"
+                      className="w-full rounded-2xl bg-muted px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:hover:bg-muted disabled:hover:text-inherit"
                     >
                       {item}
                     </button>
                   </li>
                 ))}
               </ul>
-            </div>
+            </section>
           ) : null}
 
-          {messages.isLoading ? <Skeleton className="h-20 w-full rounded-2xl" /> : null}
+          {messages.isLoading ? <Skeleton className="h-24 w-full rounded-3xl" /> : null}
+
+          {messages.isError ? (
+            <div className="rounded-3xl border border-primary/15 bg-white p-4 text-sm">
+              <p className="font-medium">We couldn't load this conversation.</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3 rounded-full"
+                onClick={() => messages.refetch()}
+              >
+                Try again
+              </Button>
+            </div>
+          ) : null}
 
           {history.map((message) =>
             message.role === "user" ? (
               <div key={message.id} className="flex justify-end">
-                <p className="max-w-[85%] whitespace-pre-line rounded-3xl bg-primary px-4 py-3 text-sm text-primary-foreground">
+                <p className="max-w-[85%] whitespace-pre-line rounded-3xl rounded-br-lg bg-primary px-4 py-3 text-sm leading-relaxed text-primary-foreground">
                   {message.content}
                 </p>
               </div>
             ) : (
-              <div key={message.id} className="surface-card p-4">
-                <p className="whitespace-pre-line text-sm leading-relaxed">{message.content}</p>
-                {message.sources?.length ? (
-                  <div className="mt-3 border-t border-border pt-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Sources
-                    </p>
-                    <ul className="mt-2 space-y-1.5">
-                      {message.sources.map((source, index) => (
-                        <li key={`${message.id}-${index}`} className="text-xs">
-                          <span className="font-medium">{source.title}</span>
-                          {source.source_name ? (
-                            <span className="text-muted-foreground"> — {source.source_name}</span>
-                          ) : null}
-                          {source.source_url ? (
-                            <a
-                              href={source.source_url}
-                              target="_blank"
-                              rel="noreferrer noopener"
-                              className="ml-1 inline-flex items-center gap-1 text-primary underline"
-                            >
-                              open
-                              <ExternalLink className="size-3" aria-hidden="true" />
-                            </a>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
+              <div key={message.id} className="flex items-start gap-3">
+                <span
+                  aria-hidden="true"
+                  className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground"
+                >
+                  <Sparkles className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1 rounded-3xl rounded-tl-lg border border-primary/15 bg-white p-4">
+                  <p className="sr-only">TrustBot says:</p>
+                  <p className="whitespace-pre-line text-[15px] leading-relaxed">
+                    {message.content}
+                  </p>
+
+                  {message.sources?.length ? (
+                    <div className="mt-4 border-t border-primary/10 pt-3">
+                      <p className="flex items-center gap-1.5 text-sm font-semibold">
+                        <BadgeCheck className="size-4" aria-hidden="true" />
+                        Sources
+                      </p>
+                      <ul className="mt-2 space-y-2">
+                        {message.sources.map((source, index) => (
+                          <li
+                            key={`${message.id}-${index}`}
+                            className="rounded-2xl bg-muted px-3 py-2.5 text-sm"
+                          >
+                            <span className="block font-medium leading-snug">{source.title}</span>
+                            {source.source_name || source.published_at ? (
+                              <span className="mt-0.5 block text-primary/60">
+                                {source.source_name}
+                                {source.source_name && source.published_at ? " · " : ""}
+                                {source.published_at ? timeAgo(source.published_at) : ""}
+                              </span>
+                            ) : null}
+                            {source.source_url ? (
+                              <a
+                                href={source.source_url}
+                                target="_blank"
+                                rel="noreferrer noopener"
+                                className="mt-1.5 inline-flex items-center gap-1 font-semibold text-primary underline underline-offset-2"
+                              >
+                                Open source
+                                <ExternalLink className="size-3.5" aria-hidden="true" />
+                                <span className="sr-only"> (opens in a new tab)</span>
+                              </a>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ),
           )}
@@ -205,48 +295,97 @@ function AskPage() {
           {pending ? (
             <>
               <div className="flex justify-end">
-                <p className="max-w-[85%] rounded-3xl bg-primary px-4 py-3 text-sm text-primary-foreground">
+                <p className="max-w-[85%] whitespace-pre-line rounded-3xl rounded-br-lg bg-primary px-4 py-3 text-sm leading-relaxed text-primary-foreground">
                   {pending}
                 </p>
               </div>
-              <div className="surface-card p-4" aria-live="polite">
-                <p className="text-sm text-muted-foreground">
-                  Checking verified campus records…
-                </p>
+              <div className="flex items-start gap-3">
+                <span
+                  aria-hidden="true"
+                  className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground"
+                >
+                  <Sparkles className="size-4" />
+                </span>
+                <div className="flex items-center gap-3 rounded-3xl rounded-tl-lg border border-primary/15 bg-white px-4 py-3">
+                  <span className="flex items-center gap-1" aria-hidden="true">
+                    {[0, 1, 2].map((dot) => (
+                      <span
+                        key={dot}
+                        className="size-1.5 rounded-full bg-primary/50 motion-safe:animate-bounce"
+                        style={{ animationDelay: `${dot * 120}ms` }}
+                      />
+                    ))}
+                  </span>
+                  <span className="text-sm text-primary/70" role="status">
+                    Checking verified campus records…
+                  </span>
+                </div>
               </div>
             </>
           ) : null}
           <div ref={bottomRef} />
         </div>
 
-        <form
-          className="sticky bottom-24 mt-4 flex items-end gap-2 lg:bottom-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            submit(draft);
-          }}
-        >
-          <label htmlFor="trustbot-input" className="sr-only">
-            Ask TrustBot a question
-          </label>
-          <Textarea
-            id="trustbot-input"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Ask about fees, exams, registration…"
-            rows={1}
-            className="min-h-12 rounded-2xl bg-card"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            className="size-12 shrink-0 rounded-2xl"
-            aria-label="Send question"
-            disabled={send.isPending || !draft.trim()}
+        {/* composer */}
+        <div className="sticky bottom-24 -mx-4 mt-4 bg-gradient-to-t from-background via-background to-transparent px-4 pb-2 pt-4 lg:bottom-0">
+          {outOfCredits ? (
+            <p
+              role="status"
+              className="mb-3 rounded-2xl border border-primary/15 bg-muted px-4 py-3 text-sm leading-relaxed"
+            >
+              You're out of credits, so TrustBot is paused.{" "}
+              <Link to="/updates" className="font-semibold underline underline-offset-2">
+                Campus updates
+              </Link>{" "}
+              are still free to read.
+            </p>
+          ) : null}
+
+          <form
+            className="flex items-end gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (canSend) submit(draft);
+            }}
           >
-            <Send />
-          </Button>
-        </form>
+            <label htmlFor="trustbot-input" className="sr-only">
+              Ask TrustBot a question
+            </label>
+            <Textarea
+              ref={inputRef}
+              id="trustbot-input"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                // Enter sends, Shift+Enter adds a line. Touch keyboards keep Enter as a new line.
+                if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+                if (!window.matchMedia("(pointer: fine)").matches) return;
+                event.preventDefault();
+                if (canSend) submit(draft);
+              }}
+              placeholder={outOfCredits ? "No credits left" : "Ask about fees, exams, registration…"}
+              rows={1}
+              disabled={outOfCredits}
+              className="min-h-12 resize-none rounded-3xl border-primary/20 bg-white px-4 py-3"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              className="size-12 shrink-0 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
+              aria-label="Send question"
+              disabled={!canSend}
+            >
+              {send.isPending ? (
+                <Loader2 className="animate-spin" aria-hidden="true" />
+              ) : (
+                <Send aria-hidden="true" />
+              )}
+            </Button>
+          </form>
+          <p className="mt-2 px-2 text-xs text-primary/60 [@media(pointer:coarse)]:hidden">
+            Enter to send · Shift+Enter for a new line
+          </p>
+        </div>
       </div>
     </AppShell>
   );
