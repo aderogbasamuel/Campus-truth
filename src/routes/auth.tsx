@@ -1,7 +1,7 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { BadgeCheck, Eye, EyeOff, Loader2, MessagesSquare, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,28 @@ const PERKS = [
   "TrustBot only answers from verified records",
   "Course reps are clearly marked",
 ];
+
+// Set just before we leave for Google. When we land back on this page it tells us a
+// sign-in is being finished, so we can show the loading screen straight away instead
+// of flashing the login form while Supabase exchanges the code.
+const OAUTH_PENDING_KEY = "campustruth:oauth-pending";
+
+function readOAuthPending() {
+  try {
+    return window.sessionStorage.getItem(OAUTH_PENDING_KEY) === "1";
+  } catch {
+    return false; // storage blocked (private mode etc.)
+  }
+}
+
+function writeOAuthPending(on: boolean) {
+  try {
+    if (on) window.sessionStorage.setItem(OAUTH_PENDING_KEY, "1");
+    else window.sessionStorage.removeItem(OAUTH_PENDING_KEY);
+  } catch {
+    // ignore: the loading screen is a nicety, sign-in still works without it
+  }
+}
 
 function GoogleIcon() {
   return (
@@ -76,17 +98,53 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/home", replace: true });
+  // `redirecting` drives the full-screen "Signing you in…" state. It starts true when
+  // we are landing back from Google, so the form never flashes.
+  const [redirecting, setRedirecting] = useState(
+    () => typeof window !== "undefined" && readOAuthPending(),
+  );
+  const [slow, setSlow] = useState(false);
+  const [openingGoogle, setOpeningGoogle] = useState(false);
+  const redirectedRef = useRef(false);
+
+  // The one place that leaves this page. Safe to call more than once (the auth
+  // listener and the form's onSuccess both fire), only the first call does anything.
+  const goHome = useCallback(() => {
+    if (redirectedRef.current) return;
+    redirectedRef.current = true;
+    writeOAuthPending(false);
+    setRedirecting(true);
+    navigate({ to: "/home", replace: true }).catch(() => {
+      // navigation failed: drop the loading screen so the form is usable again
+      redirectedRef.current = false;
+      setRedirecting(false);
     });
+  }, [navigate]);
+
+  useEffect(() => {
+    // INITIAL_SESSION fires straight away from local storage, so already-signed-in
+    // visitors are redirected without waiting on a network call.
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
-        navigate({ to: "/home", replace: true });
+        goHome();
+      } else if (event === "INITIAL_SESSION") {
+        // Initialised with no session: nothing is being finished, show the form.
+        writeOAuthPending(false);
+        setRedirecting(false);
       }
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+  }, [goHome]);
+
+  // If the redirect takes a while (slow network, heavy first load), say so.
+  useEffect(() => {
+    if (!redirecting) {
+      setSlow(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setSlow(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, [redirecting]);
 
   const submit = useMutation({
     mutationFn: async () => {
@@ -112,24 +170,47 @@ function AuthPage() {
         setMode("login");
         return;
       }
-      navigate({ to: "/home", replace: true });
+      goHome();
     },
     onError: (error) => toast.error(friendlyError(error)),
   });
 
   const google = useMutation({
-  mutationFn: async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth?mode=login` },
-    });
-    if (error) throw error;
-    // the browser redirects to Google here, so no onSuccess navigation
-  },
-  onError: (error) => toast.error(friendlyError(error)),
-});
+    mutationFn: async () => {
+      writeOAuthPending(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth?mode=login` },
+      });
+      if (error) throw error;
+      // the browser redirects to Google from here, so there is no navigation to do
+    },
+    // The mutation resolves before the browser actually leaves, so keep the button
+    // busy ourselves instead of letting it look idle for a moment.
+    onSuccess: () => setOpeningGoogle(true),
+    onError: (error) => {
+      writeOAuthPending(false);
+      toast.error(friendlyError(error));
+    },
+  });
 
-  const busy = submit.isPending || google.isPending;
+  // Coming back with the browser's back button can restore this page frozen mid-click.
+  const { reset: resetGoogle } = google;
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      writeOAuthPending(false);
+      redirectedRef.current = false;
+      setRedirecting(false);
+      setOpeningGoogle(false);
+      resetGoogle();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [resetGoogle]);
+
+  const googleBusy = google.isPending || openingGoogle;
+  const busy = submit.isPending || googleBusy || redirecting;
 
   const tab = (active: boolean) =>
     `rounded-full py-2 text-sm font-medium transition-colors ${
@@ -138,6 +219,40 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen bg-background lg:grid lg:grid-cols-2">
+      {/* shown from the moment we know sign-in worked until /home has loaded */}
+      {redirecting ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-primary px-6 text-center text-primary-foreground"
+        >
+          <span className="flex size-16 animate-pulse items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+            <MessagesSquare className="size-8" aria-hidden="true" />
+          </span>
+          <div className="space-y-2">
+            <p className="text-xl font-semibold tracking-tight">
+              {slow ? "Still working on it…" : "Signing you in…"}
+            </p>
+            <p className="max-w-xs text-sm leading-relaxed text-primary-foreground/80">
+              {slow
+                ? "Your connection looks slow. Hang tight, we're almost there."
+                : "Getting your campus feed ready."}
+            </p>
+          </div>
+          <Loader2 className="size-6 animate-spin text-accent" aria-hidden="true" />
+          {slow ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              onClick={() => window.location.reload()}
+            >
+              Taking too long? Try again
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
       {/* brand panel: compact header on mobile, full side panel on desktop */}
       <aside className="relative overflow-hidden bg-primary px-6 pb-16 pt-10 text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-14">
         <BadgeCheck
@@ -304,7 +419,7 @@ function AuthPage() {
               onClick={() => google.mutate()}
               className="h-12 w-full gap-2.5 rounded-full border-primary/20 bg-transparent text-base hover:bg-primary/5"
             >
-              {google.isPending ? (
+              {googleBusy ? (
                 <>
                   <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                   Opening Google…
