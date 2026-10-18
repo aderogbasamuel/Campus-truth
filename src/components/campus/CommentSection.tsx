@@ -87,7 +87,7 @@ export function CommentSection({
               />
               <div className="min-w-0 flex-1 rounded-xl bg-card px-3 py-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">
+                  <span className="text-sm font-semibold truncate">
                     {comment.author?.full_name ?? "Student"}
                   </span>
                   <span className="text-xs text-muted-foreground">
