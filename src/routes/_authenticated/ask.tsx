@@ -93,14 +93,6 @@ function AskPage() {
     bottomRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "end" });
   }, [messages.data, pending]);
 
-  // the input grows with what you type, up to a limit
-  useEffect(() => {
-    const el = inputRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
-  }, [draft]);
-
   const send = useMutation({
     mutationFn: async (question: string) => {
       setPending(question);
@@ -342,7 +334,7 @@ function AskPage() {
           ) : null}
 
           <form
-            className="flex items-end gap-2"
+            className="flex items-center gap-2"
             onSubmit={(event) => {
               event.preventDefault();
               if (canSend) submit(draft);
@@ -352,17 +344,22 @@ function AskPage() {
               Ask TrustBot a question
             </label>
             <Textarea
-  ref={inputRef}
-  id="trustbot-input"
-  value={draft}
-  onChange={(event) => setDraft(event.target.value)}
-  onKeyDown={...}
-  placeholder={outOfCredits ? "No credits left" : "Ask about fees, exams, registration…"}
-  rows={1}
-  disabled={outOfCredits}
-  className="h-12 min-h-12 max-h-12 resize-none overflow-y-auto rounded-3xl border-primary/20 bg-white px-4 py-[13px] leading-5"
-/>
-
+              ref={inputRef}
+              id="trustbot-input"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                // Enter sends, Shift+Enter adds a line. Touch keyboards keep Enter as a new line.
+                if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+                if (!window.matchMedia("(pointer: fine)").matches) return;
+                event.preventDefault();
+                if (canSend) submit(draft);
+              }}
+              placeholder={outOfCredits ? "No credits left" : "Ask about fees, exams, registration…"}
+              rows={1}
+              disabled={outOfCredits}
+              className="field-sizing-fixed h-12 min-h-12 max-h-12 resize-none overflow-y-auto rounded-3xl border-primary/20 bg-white px-4 py-[13px] leading-5"
+            />
             <Button
               type="submit"
               size="icon"
