@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
+  CircleHelp,
   ImagePlus,
   Loader2,
   MessagesSquare,
@@ -64,6 +65,12 @@ const MAX_POST_LENGTH = 1000;
 
 // one card style for the whole page, same as PostCard
 const CARD = "rounded-3xl border border-primary/15 bg-white";
+
+// Pages that don't fit in the mobile bottom bar
+const QUICK_LINKS = [
+  { to: "/qa", label: "Q&A", hint: "Ask students, get answers", icon: CircleHelp },
+  { to: "/communities", label: "Communities", hint: "Your faculty, department and level", icon: Users },
+] as const;
 
 function HomePage() {
   const navigate = useNavigate();
@@ -163,7 +170,7 @@ function HomePage() {
         {/* Hero: Ask TrustBot */}
         <Link
           to="/ask"
-          className="group relative mb-8 flex items-center gap-4 overflow-hidden rounded-3xl bg-primary p-4 text-primary-foreground shadow-lg shadow-primary/10 transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.99] sm:p-5"
+          className="group relative mb-3 flex items-center gap-4 overflow-hidden rounded-3xl bg-primary p-4 text-primary-foreground shadow-lg shadow-primary/10 transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.99] sm:p-5"
         >
           <BadgeCheck
             aria-hidden="true"
@@ -183,6 +190,34 @@ function HomePage() {
             <ArrowRight className="size-4" aria-hidden="true" />
           </span>
         </Link>
+
+        {/* Quick links: mobile only, the desktop sidebar already lists these */}
+        <nav aria-label="Quick links" className="mb-8 grid grid-cols-2 gap-3 lg:hidden">
+          {QUICK_LINKS.map(({ to, label, hint, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className={cn(
+                CARD,
+                "group flex flex-col gap-3 p-4 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.99]",
+              )}
+            >
+              <span className="flex items-center justify-between">
+                <span className="flex size-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                <ArrowUpRight
+                  className="size-4 text-primary/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </span>
+              <span>
+                <span className="block text-base font-semibold leading-snug">{label}</span>
+                <span className="mt-0.5 block text-sm leading-snug text-primary/60">{hint}</span>
+              </span>
+            </Link>
+          ))}
+        </nav>
 
         {/* Trending */}
         <section className="mb-8" aria-labelledby="trending-heading">
