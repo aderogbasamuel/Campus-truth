@@ -41,6 +41,8 @@ const SUGGESTIONS = [
   "What do I do if my result is missing?",
 ];
 
+const MAX_INPUT_HEIGHT = 160;
+
 type Source = {
   title: string;
   source_name: string | null;
@@ -92,6 +94,15 @@ function AskPage() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     bottomRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "end" });
   }, [messages.data, pending]);
+
+  // one line by default; grows as the text wraps, up to MAX_INPUT_HEIGHT, then scrolls
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const borders = el.offsetHeight - el.clientHeight;
+    el.style.height = `${Math.min(el.scrollHeight + borders, MAX_INPUT_HEIGHT)}px`;
+  }, [draft]);
 
   const send = useMutation({
     mutationFn: async (question: string) => {
@@ -334,7 +345,7 @@ function AskPage() {
           ) : null}
 
           <form
-            className="flex items-center gap-2"
+            className="flex items-end gap-2"
             onSubmit={(event) => {
               event.preventDefault();
               if (canSend) submit(draft);
@@ -358,7 +369,7 @@ function AskPage() {
               placeholder={outOfCredits ? "No credits left" : "Ask about fees, exams, registration…"}
               rows={1}
               disabled={outOfCredits}
-              className="field-sizing-fixed h-12 min-h-12 max-h-12 resize-none overflow-y-auto rounded-3xl border-primary/20 bg-white px-4 py-[13px] leading-5"
+              className="field-sizing-fixed min-h-12 min-w-0 flex-1 resize-none overflow-y-auto rounded-3xl border-primary/20 bg-white px-4 py-[13px] leading-5 placeholder:overflow-hidden placeholder:text-ellipsis placeholder:whitespace-nowrap"
             />
             <Button
               type="submit"
