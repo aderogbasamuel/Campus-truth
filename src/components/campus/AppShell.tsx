@@ -54,9 +54,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* desktop sidebar */}
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-1 border-r border-primary/10 bg-sidebar px-4 py-6 lg:flex">
           <Link to="/home" className="mb-6 flex items-center gap-2.5 px-2">
-            <span className="flex size-9 items-center justify-center rounded-xl border border-primary/20 bg-accent text-accent-foreground">
-              <MessagesSquare className="size-5" aria-hidden="true" />
-            </span>
+            <img
+              src="/logo-icon.svg"
+              alt=""
+              width={37}
+              height={43}
+              className="h-10 w-auto shrink-0"
+            />
             <span className="text-lg font-semibold tracking-tight">
               Campus<span className="text-primary/60">Truth</span>
             </span>
@@ -118,9 +122,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* mobile top bar */}
           <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-primary/10 bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
             <Link to="/home" className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-xl border border-primary/20 bg-accent text-accent-foreground">
-                <MessagesSquare className="size-5" aria-hidden="true" />
-              </span>
+              <img
+                src="/logo-icon.svg"
+                alt=""
+                width={31}
+                height={36}
+                className="h-9 w-auto shrink-0"
+              />
               <span className="text-base font-semibold tracking-tight">
                 Campus<span className="text-primary/60">Truth</span>
               </span>
