@@ -235,7 +235,7 @@ function AskPage() {
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Ask about fees, exams, registration…"
             rows={1}
-            className="min-h-12 rounded-2xl bg-card"
+            className="min-h-12 rounded-2xl bg-card placeholder:text-nowrap"
           />
           <Button
             type="submit"
