@@ -34,7 +34,9 @@ export function CommentSection({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("comments")
-        .select("id, content, created_at, author_id, author:profiles!comments_author_id_fkey(full_name, avatar_url, verified)")
+        .select(
+          "id, content, created_at, author_id, author:profiles!comments_author_id_fkey(full_name, avatar_url, verified)",
+        )
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -87,13 +89,13 @@ export function CommentSection({
               />
               <div className="min-w-0 flex-1 rounded-xl bg-card px-3 py-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold truncate">
-                    {comment.author?.full_name ?? "Student"}
+                  <span className="text-sm font-semibold truncate min-w-0">
+                    {comment.author?.full_name || "Student"}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground shrink-0">
                     {timeAgo(comment.created_at)}
                   </span>
-                  <div className="ml-auto flex items-center gap-1">
+                  <div className="ml-auto flex items-center gap-1 shrink-0">
                     <ReportDialog targetType="comment" targetId={comment.id}>
                       <Button variant="ghost" size="icon" aria-label="Report comment">
                         <Flag className="size-3.5" />
