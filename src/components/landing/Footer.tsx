@@ -1,3 +1,4 @@
+
 import { Link } from "@tanstack/react-router";
 import { MessagesSquare } from "lucide-react";
 import { NAV_LINKS } from "./Navbar";
@@ -15,17 +16,26 @@ export function Footer() {
             </span>
             CampusTruth
           </Link>
+
           <p className="mt-2 text-sm text-primary/60">
             Verified campus updates for UNILAG students.
           </p>
         </div>
 
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
+        <nav
+          aria-label="Footer"
+          className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium"
+        >
           {NAV_LINKS.map((link: (typeof NAV_LINKS)[number]) => (
-            <Link key={link.to} to={link.to} className="text-primary/70 transition-colors hover:text-primary">
+            <Link
+              key={link.to}
+              to={link.to}
+              className="text-primary/70 transition-colors hover:text-primary"
+            >
               {link.label}
             </Link>
           ))}
+
           <Link
             to="/auth"
             search={{ mode: "login" }}
@@ -33,10 +43,26 @@ export function Footer() {
           >
             Log in
           </Link>
+
+          <Link
+            to="/privacy"
+            className="text-primary/70 transition-colors hover:text-primary"
+          >
+            Privacy Policy
+          </Link>
+
+          <Link
+            to="/terms"
+            className="text-primary/70 transition-colors hover:text-primary"
+          >
+            Terms of Service
+          </Link>
         </nav>
       </div>
 
-      <p className="px-6 pb-8 text-center text-xs text-primary/50">© {year} CampusTruth</p>
+      <p className="px-6 pb-8 text-center text-xs text-primary/50">
+        © {year} CampusTruth. All rights reserved.
+      </p>
     </footer>
   );
 }
