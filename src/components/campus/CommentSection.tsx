@@ -72,24 +72,37 @@ export function CommentSection({
   });
 
   return (
-    <div className="space-y-4 border-t border-border bg-secondary/40 p-4">
+    // min-w-0 + overflow-hidden: stops long names or text from stretching the post card
+    <div className="min-w-0 space-y-4 overflow-hidden border-t border-border bg-secondary/40 p-4">
       {comments.isLoading ? (
         <div className="space-y-2">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-3/4" />
         </div>
+      ) : comments.isError ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-card px-3 py-2">
+          <p className="min-w-0 text-sm text-muted-foreground">
+            Couldn't load comments. {friendlyError(comments.error)}
+          </p>
+          <Button type="button" variant="outline" size="sm" onClick={() => comments.refetch()}>
+            Retry
+          </Button>
+        </div>
       ) : comments.data?.length ? (
         <ul className="space-y-3">
           {comments.data.map((comment) => (
-            <li key={comment.id} className="flex items-start gap-3">
+            <li key={comment.id} className="flex min-w-0 items-start gap-3">
               <UserAvatar
                 name={comment.author?.full_name}
                 url={comment.author?.avatar_url}
-                className="size-8"
+                className="size-8 shrink-0"
               />
               <div className="min-w-0 flex-1 rounded-xl bg-card px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold truncate min-w-0">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className="min-w-0 truncate text-sm font-semibold"
+                    title={comment.author?.full_name || "Student"}
+                  >
                     {comment.author?.full_name || "Student"}
                   </span>
                   <span className="text-xs text-muted-foreground shrink-0">
@@ -106,6 +119,7 @@ export function CommentSection({
                         variant="ghost"
                         size="icon"
                         aria-label="Delete comment"
+                        disabled={deleteComment.isPending}
                         onClick={() => deleteComment.mutate(comment.id)}
                       >
                         <Trash2 className="size-3.5" />
@@ -113,7 +127,9 @@ export function CommentSection({
                     ) : null}
                   </div>
                 </div>
-                <p className="mt-1 whitespace-pre-line text-sm">{comment.content}</p>
+                <p className="mt-1 whitespace-pre-line text-sm [overflow-wrap:anywhere]">
+                  {comment.content}
+                </p>
               </div>
             </li>
           ))}
