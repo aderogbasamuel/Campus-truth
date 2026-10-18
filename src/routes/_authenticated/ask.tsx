@@ -352,22 +352,17 @@ function AskPage() {
               Ask TrustBot a question
             </label>
             <Textarea
-              ref={inputRef}
-              id="trustbot-input"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={(event) => {
-                // Enter sends, Shift+Enter adds a line. Touch keyboards keep Enter as a new line.
-                if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
-                if (!window.matchMedia("(pointer: fine)").matches) return;
-                event.preventDefault();
-                if (canSend) submit(draft);
-              }}
-              placeholder={outOfCredits ? "No credits left" : "Ask about fees, exams, registration…"}
-              rows={1}
-              disabled={outOfCredits}
-              className="min-h-12 resize-none rounded-3xl border-primary/20 bg-white px-4 py-3"
-            />
+  ref={inputRef}
+  id="trustbot-input"
+  value={draft}
+  onChange={(event) => setDraft(event.target.value)}
+  onKeyDown={...}
+  placeholder={outOfCredits ? "No credits left" : "Ask about fees, exams, registration…"}
+  rows={1}
+  disabled={outOfCredits}
+  className="h-12 min-h-12 max-h-12 resize-none overflow-y-auto rounded-3xl border-primary/20 bg-white px-4 py-[13px] leading-5"
+/>
+
             <Button
               type="submit"
               size="icon"
