@@ -339,24 +339,6 @@ function AskPage() {
           <label htmlFor="trustbot-input" className="sr-only">
             Ask TrustBot a question
           </label>
-          <Textarea
-            id="trustbot-input"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Ask about fees, exams, registration…"
-            rows={1}
-            className="min-h-12 rounded-2xl bg-card placeholder:text-nowrap"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            className="size-12 shrink-0 rounded-2xl"
-            aria-label="Send question"
-            disabled={send.isPending || !draft.trim()}
-          >
-            <label htmlFor="trustbot-input" className="sr-only">
-              Ask TrustBot a question
-            </label>
             <Textarea
               ref={inputRef}
               id="trustbot-input"
@@ -387,12 +369,11 @@ function AskPage() {
                 <Send aria-hidden="true" />
               )}
             </Button>
-          </form>
+        </form>
           <p className="mt-2 px-2 text-xs text-primary/60 [@media(pointer:coarse)]:hidden">
             Enter to send · Shift+Enter for a new line
           </p>
         </div>
-      </div>
     </AppShell>
   );
 }

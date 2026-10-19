@@ -129,41 +129,73 @@ ${contextBlock}`;
     //     ],
     //   }),
     // });
-    const response = await fetch(
-     ` https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, 
-      {
-      method: "POST",
-      headers: {
-        // Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+   
+const model = "gemini-2.5-flash";
+
+const response = await fetch(
+  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: systemPrompt }],
       },
-      body: JSON.stringify({
-        // model: "openai/gpt-5.6-sol",
-        reasoning_effort: "none",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: data.question },
-        ],
-      }),
-    });
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: data.question }],
+        },
+      ],
+      generationConfig: {
+        maxOutputTokens: 300,
+        temperature: 0.2,
+      },
+    }),
+  }
+);
 
-    if (!response.ok) {
-      const body = await response.text();
-      console.error(`AI gateway error [${response.status}]: ${body}`);
-      if (response.status === 429) throw new Error("TrustBot is busy right now. Please try again shortly.");
-      if (response.status === 402) throw new Error("The campus assistant has run out of AI capacity. Please contact CampusTruth support.");
-      throw new Error("TrustBot couldn't answer that right now. Please try again.");
-    }
+if (!response.ok) {
+  const errorBody = await response.text();
 
-    const payload = (await response.json()) as {
-      choices?: { message?: { content?: string } }[];
+  console.error(
+    `Gemini API error [${response.status}]: ${errorBody}`
+  );
+
+  if (response.status === 429) {
+    throw new Error(
+      "TrustBot is busy right now. Please try again shortly."
+    );
+  }
+
+  throw new Error(
+    "TrustBot couldn't answer that right now. Please try again."
+  );
+}
+
+const payload = (await response.json()) as {
+  candidates?: {
+    content?: {
+      parts?: { text?: string }[];
     };
-    const answer =
-      payload.choices?.[0]?.message?.content?.trim() ??
-      "I couldn't find a verified source for that information yet.";
+  }[];
+};
 
-    const grounded = !answer.startsWith("I couldn't find a verified source");
+const answer =
+  payload.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text ?? "")
+    .join("")
+    .trim() ||
+  "I couldn't find a verified source for that information yet.";
 
+const grounded = !answer.startsWith(
+  "I couldn't find a verified source"
+);
+
+
+  
     // Persist the conversation.
     let conversationId = data.conversationId ?? null;
     if (!conversationId) {
