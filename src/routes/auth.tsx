@@ -1,6 +1,6 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { BadgeCheck, Eye, EyeOff, Loader2, MessagesSquare, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -226,9 +226,13 @@ function AuthPage() {
           aria-live="polite"
           className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-primary px-6 text-center text-primary-foreground"
         >
-          <span className="flex size-16 animate-pulse items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-            <MessagesSquare className="size-8" aria-hidden="true" />
-          </span>
+          <img
+            src="/logo-icon-reversed.svg"
+            alt=""
+            width={69}
+            height={80}
+            className="h-20 w-auto animate-pulse"
+          />
           <div className="space-y-2">
             <p className="text-xl font-semibold tracking-tight">
               {slow ? "Still working on it…" : "Signing you in…"}
@@ -261,11 +265,14 @@ function AuthPage() {
           className="pointer-events-none absolute -bottom-16 -right-12 hidden size-96 text-accent/15 lg:block"
         />
 
-        <Link to="/" className="relative flex w-fit items-center gap-2.5">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-            <MessagesSquare className="size-5" aria-hidden="true" />
-          </span>
-          <span className="text-lg font-semibold tracking-tight">CampusTruth</span>
+        <Link to="/" aria-label="CampusTruth home" className="relative flex w-fit items-center">
+          <img
+            src="/logo-horizontal-reversed.svg"
+            alt="CampusTruth"
+            width={179}
+            height={44}
+            className="h-11 w-auto"
+          />
         </Link>
 
         <div className="relative mt-8 lg:mt-0">

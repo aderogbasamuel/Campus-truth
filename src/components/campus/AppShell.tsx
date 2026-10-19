@@ -53,13 +53,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="mx-auto flex w-full max-w-7xl">
         {/* desktop sidebar */}
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-1 border-r border-primary/10 bg-sidebar px-4 py-6 lg:flex">
-          <Link to="/home" className="mb-6 flex items-center gap-2.5 px-2">
-            <span className="flex size-9 items-center justify-center rounded-xl border border-primary/20 bg-accent text-accent-foreground">
-              <MessagesSquare className="size-5" aria-hidden="true" />
-            </span>
-            <span className="text-lg font-semibold tracking-tight">
-              Campus<span className="text-primary/60">Truth</span>
-            </span>
+          <Link to="/home" aria-label="CampusTruth home" className="mb-6 flex items-center px-2">
+            <img
+              src="/logo-horizontal.svg"
+              alt="CampusTruth"
+              width={179}
+              height={44}
+              className="h-11 w-auto"
+            />
           </Link>
           <nav className="flex flex-col gap-1" aria-label="Main navigation">
             {DESKTOP_NAV.map((item) => {
@@ -117,13 +118,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="min-w-0 flex-1 pb-28 lg:pb-0">
           {/* mobile top bar */}
           <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-primary/10 bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
-            <Link to="/home" className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-xl border border-primary/20 bg-accent text-accent-foreground">
-                <MessagesSquare className="size-5" aria-hidden="true" />
-              </span>
-              <span className="text-base font-semibold tracking-tight">
-                Campus<span className="text-primary/60">Truth</span>
-              </span>
+            <Link to="/home" aria-label="CampusTruth home" className="flex items-center">
+              <img
+                src="/logo-horizontal.svg"
+                alt="CampusTruth"
+                width={147}
+                height={36}
+                className="h-9 w-auto"
+              />
             </Link>
             <div className="ml-auto flex items-center gap-1">
               <Link

@@ -40,10 +40,14 @@ export function Navbar() {
         <div className="flex items-center justify-between gap-2 rounded-full border border-primary/10 bg-white py-2.5 pl-3 pr-2.5">
           {/* logo */}
           <Link to="/" onClick={close} className="flex items-center gap-2.5">
-            <span className="flex size-10 items-center justify-center rounded-xl border border-primary/20 bg-accent text-accent-foreground">
-              <MessagesSquare className="size-5" aria-hidden="true" />
-            </span>
-            <span className="text-lg font-semibold tracking-tight">CampusTruth</span>
+            <img
+              src="/logo-horizontal.svg"
+              alt="CampusTruth"
+              width={179}
+              height={44}
+              className="h-11 w-auto"
+            />
+          
           </Link>
 
           {/* desktop links */}
