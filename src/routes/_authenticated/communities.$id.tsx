@@ -82,7 +82,9 @@ function CommunityDetailPage() {
       let query = supabase
         .from("posts")
         .select(
-          "id, author_id, title, content, image_url, category, verified, created_at, author:profiles!posts_author_id_fkey(full_name, username, avatar_url, verified)",
+          // reactions(count) and comments(count) match the home feed query, so PostCard
+          // shows real like and comment numbers here too
+          "id, author_id, title, content, image_url, category, verified, created_at, author:profiles!posts_author_id_fkey(full_name, username, avatar_url, verified), reactions(count), comments(count)",
         )
         .eq("removed", false)
         .order("created_at", { ascending: false })
@@ -92,7 +94,11 @@ function CommunityDetailPage() {
       else if (record.faculty_id) query = query.eq("faculty_id", record.faculty_id);
       if (record.level) query = query.eq("level", record.level);
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        // the screen only says "couldn't load posts", so keep the real reason in the console
+        console.error("Community posts failed to load:", error);
+        throw error;
+      }
       return (data ?? []) as unknown as FeedPost[];
     },
   });
@@ -120,6 +126,7 @@ function CommunityDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["community-joined", id] });
       queryClient.invalidateQueries({ queryKey: ["community-member-count", id] });
       queryClient.invalidateQueries({ queryKey: ["community-members"] });
+      queryClient.invalidateQueries({ queryKey: ["community-counts"] });
     },
     onError: (error) => toast.error(friendlyError(error)),
   });
@@ -227,6 +234,11 @@ function CommunityDetailPage() {
                     icon={Users}
                     title="No posts yet"
                     description="Be the first to share something useful with this group from the home feed."
+                    action={
+                      <Button asChild variant="outline">
+                        <Link to="/home">Go to the home feed</Link>
+                      </Button>
+                    }
                   />
                 </div>
               )}
