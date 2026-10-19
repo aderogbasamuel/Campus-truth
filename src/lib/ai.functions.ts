@@ -18,6 +18,12 @@ const STOP_WORDS = new Set([
   "the","is","are","a","an","of","for","to","in","on","my","what","when","how","do","i","does","and","it","this","that","can","you","about","much","where","who",
 ]);
 
+const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
+// Google's current Flash model. Set GEMINI_MODEL on the server to switch (for example to a
+// cheaper "-flash-lite" model) without touching code.
+const DEFAULT_MODEL = "gemini-3.8-flash";
+const REQUEST_TIMEOUT_MS = 25_000;
+
 function score(text: string, terms: string[]) {
   const haystack = text.toLowerCase();
   return terms.reduce((total, term) => (haystack.includes(term) ? total + 1 : total), 0);
@@ -28,9 +34,22 @@ export const askTrustBot = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AskInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    // const apiKey = process.env["LOVABLE_API_KEY"];
     const apiKey = process.env["GEMINI_API_KEY"];
-    if (!apiKey) throw new Error("The campus assistant isn't configured yet.");
+    if (!apiKey) {
+      console.error("GEMINI_API_KEY is not set. Add it to your server environment variables.");
+      throw new Error("The campus assistant isn't configured yet.");
+    }
+
+    // Fail fast when the student has no credits, before we spend money on the model.
+    // The credit itself is only charged once an answer has been produced and saved.
+    const { data: wallet } = await supabase
+      .from("credits")
+      .select("balance")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!wallet || wallet.balance < 1) {
+      throw new Error("You're out of AI credits. Campus updates and browsing stay free.");
+    }
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -86,18 +105,6 @@ export const askTrustBot = createServerFn({ method: "POST" })
           .join("\n\n")
       : "No verified records were found for this question.";
 
-    // Charge a credit only once we're about to call the model.
-    const { error: creditError } = await supabase.rpc("spend_credit", {
-      _amount: 1,
-      _description: data.question.slice(0, 80),
-    });
-    if (creditError) {
-      if (creditError.message?.includes("INSUFFICIENT_CREDITS")) {
-        throw new Error("You're out of AI credits. Campus updates and browsing stay free.");
-      }
-      throw new Error("We couldn't start that request. Please try again.");
-    }
-
     const systemPrompt = `You are TrustBot, the CampusTruth campus assistant for ${
       "University of Lagos (UNILAG)"
     }. You answer only from the VERIFIED CAMPUS CONTEXT provided.
@@ -114,89 +121,80 @@ Student profile: level ${profile?.level ?? "unknown"}.
 VERIFIED CAMPUS CONTEXT:
 ${contextBlock}`;
 
-    // const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    //   method: "POST",
-    //   headers: {
-    //     Authorization: `Bearer ${apiKey}`,
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({
-    //     model: "openai/gpt-5.6-sol",
-    //     reasoning_effort: "none",
-    //     messages: [
-    //       { role: "system", content: systemPrompt },
-    //       { role: "user", content: data.question },
-    //     ],
-    //   }),
-    // });
-   
-const model = "gemini-2.5-flash";
-
-const response = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: systemPrompt }],
-      },
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: data.question }],
+    // Call Gemini directly through the Google AI REST API.
+    const model = process.env["GEMINI_MODEL"] || DEFAULT_MODEL;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    let response: Response;
+    try {
+      response = await fetch(`${GEMINI_BASE_URL}/${encodeURIComponent(model)}:generateContent`, {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": apiKey,
+          "content-type": "application/json",
         },
-      ],
-      generationConfig: {
-        maxOutputTokens: 300,
-        temperature: 0.2,
-      },
-    }),
-  }
-);
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: "user", parts: [{ text: data.question }] }],
+          // Gemini models "think" before answering and those tokens count against this
+          // limit, so leave plenty of room or the visible answer can get cut off.
+          generationConfig: { maxOutputTokens: 2048 },
+        }),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      console.error("TrustBot request failed:", error);
+      throw new Error("TrustBot couldn't answer that right now. Please try again.");
+    } finally {
+      clearTimeout(timeout);
+    }
 
-if (!response.ok) {
-  const errorBody = await response.text();
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Gemini API error [${response.status}]: ${body}`);
+      if (response.status === 429 || response.status === 503) {
+        throw new Error("TrustBot is busy right now. Please try again shortly.");
+      }
+      if (
+        response.status === 401 ||
+        response.status === 403 ||
+        (response.status === 400 && /API key not valid|API_KEY_INVALID/i.test(body))
+      ) {
+        throw new Error(
+          "The campus assistant is unavailable right now. Please contact CampusTruth support.",
+        );
+      }
+      throw new Error("TrustBot couldn't answer that right now. Please try again.");
+    }
 
-  console.error(
-    `Gemini API error [${response.status}]: ${errorBody}`
-  );
-
-  if (response.status === 429) {
-    throw new Error(
-      "TrustBot is busy right now. Please try again shortly."
-    );
-  }
-
-  throw new Error(
-    "TrustBot couldn't answer that right now. Please try again."
-  );
-}
-
-const payload = (await response.json()) as {
-  candidates?: {
-    content?: {
-      parts?: { text?: string }[];
+    const payload = (await response.json()) as {
+      candidates?: {
+        content?: { parts?: { text?: string; thought?: boolean }[] };
+        finishReason?: string;
+      }[];
+      promptFeedback?: { blockReason?: string };
     };
-  }[];
-};
+    const candidate = payload.candidates?.[0];
+    const text = (candidate?.content?.parts ?? [])
+      .filter((part) => !part.thought)
+      .map((part) => part.text ?? "")
+      .join("")
+      .trim();
+    if (!text) {
+      console.warn("Gemini returned no text", {
+        finishReason: candidate?.finishReason,
+        blockReason: payload.promptFeedback?.blockReason,
+      });
+    }
+    const answer = text || "I couldn't find a verified source for that information yet.";
 
-const answer =
-  payload.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text ?? "")
-    .join("")
-    .trim() ||
-  "I couldn't find a verified source for that information yet.";
+    // Models sometimes write a curly apostrophe, so normalise it before checking.
+    const grounded = !answer
+      .replace(/\u2019/g, "'")
+      .startsWith("I couldn't find a verified source");
 
-const grounded = !answer.startsWith(
-  "I couldn't find a verified source"
-);
-
-
-  
-    // Persist the conversation.
+    // Persist the conversation. Failures here must be loud: the page reloads its history
+    // from the database, so a silent insert failure just looks like an empty chat.
     let conversationId = data.conversationId ?? null;
     if (!conversationId) {
       const { data: created, error } = await supabase
@@ -204,7 +202,10 @@ const grounded = !answer.startsWith(
         .insert({ user_id: userId, title: data.question.slice(0, 60) })
         .select("id")
         .single();
-      if (error) throw new Error("We couldn't save that conversation.");
+      if (error || !created) {
+        console.error("Could not create conversation:", error);
+        throw new Error("We couldn't save that conversation.");
+      }
       conversationId = created.id;
     } else {
       await supabase
@@ -213,7 +214,7 @@ const grounded = !answer.startsWith(
         .eq("id", conversationId);
     }
 
-    await supabase.from("messages").insert([
+    const { error: messagesError } = await supabase.from("messages").insert([
       { conversation_id: conversationId, role: "user", content: data.question },
       {
         conversation_id: conversationId,
@@ -222,6 +223,23 @@ const grounded = !answer.startsWith(
         sources: grounded ? sources : [],
       },
     ]);
+    if (messagesError) {
+      console.error("Could not save messages:", messagesError);
+      throw new Error("We couldn't save the answer. Please try again.");
+    }
+
+    // Charge the credit last, so a failed request never costs the student anything.
+    const { error: creditError } = await supabase.rpc("spend_credit", {
+      _amount: 1,
+      _description: data.question.slice(0, 80),
+    });
+    if (creditError) {
+      console.error("spend_credit failed:", creditError);
+      if (creditError.message?.includes("INSUFFICIENT_CREDITS")) {
+        throw new Error("You're out of AI credits. Campus updates and browsing stay free.");
+      }
+      throw new Error("We couldn't update your credits. Please try again.");
+    }
 
     return { conversationId, answer, sources: grounded ? sources : [] };
   });
