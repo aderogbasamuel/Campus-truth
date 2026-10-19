@@ -28,7 +28,8 @@ export const askTrustBot = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AskInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const apiKey = process.env["LOVABLE_API_KEY"];
+    // const apiKey = process.env["LOVABLE_API_KEY"];
+    const apiKey = process.env["GEMINI_API_KEY"];
     if (!apiKey) throw new Error("The campus assistant isn't configured yet.");
 
     const { data: profile } = await supabase
@@ -113,14 +114,31 @@ Student profile: level ${profile?.level ?? "unknown"}.
 VERIFIED CAMPUS CONTEXT:
 ${contextBlock}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    //   method: "POST",
+    //   headers: {
+    //     Authorization: `Bearer ${apiKey}`,
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     model: "openai/gpt-5.6-sol",
+    //     reasoning_effort: "none",
+    //     messages: [
+    //       { role: "system", content: systemPrompt },
+    //       { role: "user", content: data.question },
+    //     ],
+    //   }),
+    // });
+    const response = await fetch(
+     ` https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, 
+      {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        // Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5.6-sol",
+        // model: "openai/gpt-5.6-sol",
         reasoning_effort: "none",
         messages: [
           { role: "system", content: systemPrompt },
