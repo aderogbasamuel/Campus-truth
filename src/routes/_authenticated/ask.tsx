@@ -329,27 +329,30 @@ function AskPage() {
           <div ref={bottomRef} />
         </div>
 
-        {/* composer */}
-        <div className="sticky bottom-24 -mx-4 mt-4 bg-gradient-to-t from-background via-background to-transparent px-4 pb-2 pt-4 lg:bottom-0">
-          {outOfCredits ? (
-            <p
-              role="status"
-              className="mb-3 rounded-2xl border border-primary/15 bg-muted px-4 py-3 text-sm leading-relaxed"
-            >
-              You're out of credits, so TrustBot is paused.{" "}
-              <Link to="/updates" className="font-semibold underline underline-offset-2">
-                Campus updates
-              </Link>{" "}
-              are still free to read.
-            </p>
-          ) : null}
-
-          <form
-            className="flex items-end gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (canSend) submit(draft);
-            }}
+        <form
+          className="sticky bottom-24 mt-4 flex items-end gap-2 lg:bottom-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submit(draft);
+          }}
+        >
+          <label htmlFor="trustbot-input" className="sr-only">
+            Ask TrustBot a question
+          </label>
+          <Textarea
+            id="trustbot-input"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder="Ask about fees, exams, registration…"
+            rows={1}
+            className="min-h-12 rounded-2xl bg-card placeholder:text-nowrap"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className="size-12 shrink-0 rounded-2xl"
+            aria-label="Send question"
+            disabled={send.isPending || !draft.trim()}
           >
             <label htmlFor="trustbot-input" className="sr-only">
               Ask TrustBot a question
