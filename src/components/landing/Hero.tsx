@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  FileCheck2,
+  MessagesSquare,
+  Pause,
+  Play,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /* ------------------------------------------------------------------ */
 /* Sample conversations                                                */
 /* REPLACE these with real, checkable notices from your records.       */
-/* The card is labelled "Sample conversation", but a trust product     */
-/* should still only show answers that are actually true.              */
+/* The last one is deliberate: it shows the assistant refusing to      */
+/* guess, which is the whole promise of the product.                   */
 /* ------------------------------------------------------------------ */
 
 const questions = [
@@ -15,19 +25,28 @@ const questions = [
     question: "When does second semester registration close?",
     answer: "Registration closes this Friday at 5:00 PM. Late registration attracts a penalty fee.",
     source: "Registrar notice · published 3 days ago",
-  },
-  {
-    question: "Is the CSC 101 exam still holding on Monday?",
-    answer:
-      "Yes. The faculty timetable lists it for Monday at 9:00 AM. No change has been announced.",
-    source: "Faculty exam timetable · updated this week",
+    verified: true,
   },
   {
     question: "Where do I pay my school fees?",
     answer:
       "Fees are paid through the official student portal only. Ignore any other payment links going around.",
     source: "Bursary notice · published last week",
+    verified: true,
   },
+  {
+    question: "Someone said lectures are suspended on Thursday. True?",
+    answer:
+      "I can't find an official notice about this. Until your faculty or the Registrar confirms it, treat it as a rumour.",
+    source: "No matching official record",
+    verified: false,
+  },
+] as const;
+
+const trustPoints = [
+  { icon: FileCheck2, label: "Official sources only" },
+  { icon: ShieldCheck, label: "Source on every answer" },
+  { icon: MessagesSquare, label: "Real student threads" },
 ] as const;
 
 /* ------------------------------------------------------------------ */
@@ -61,25 +80,27 @@ export function CampusAssistantPreview() {
   const [qLen, setQLen] = useState(0);
   const [aLen, setALen] = useState(0);
   const [phase, setPhase] = useState<Phase>("question");
+  const [userPaused, setUserPaused] = useState(false);
+  const [hovering, setHovering] = useState(false);
 
+  const paused = userPaused || hovering;
   const current = questions[index]!;
 
-  // one timer chain drives the whole loop
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || paused) return;
 
     let timer: ReturnType<typeof setTimeout>;
 
     if (phase === "question") {
       timer =
         qLen < current.question.length
-          ? setTimeout(() => setQLen(qLen + 1), 40)
+          ? setTimeout(() => setQLen(qLen + 1), 38)
           : setTimeout(() => setPhase("answer"), 450);
     } else if (phase === "answer") {
       timer =
         aLen < current.answer.length
-          ? setTimeout(() => setALen(aLen + 1), 24)
-          : setTimeout(() => setPhase("hold"), 3000);
+          ? setTimeout(() => setALen(aLen + 1), 22)
+          : setTimeout(() => setPhase("hold"), 3200);
     } else {
       timer = setTimeout(() => {
         setIndex((i) => (i + 1) % questions.length);
@@ -90,33 +111,44 @@ export function CampusAssistantPreview() {
     }
 
     return () => clearTimeout(timer);
-  }, [reduced, phase, qLen, aLen, current]);
+  }, [reduced, paused, phase, qLen, aLen, current]);
 
-  // with reduced motion, show a finished conversation and never animate
+  function jumpTo(i: number) {
+    setIndex(i);
+    setQLen(0);
+    setALen(0);
+    setPhase("question");
+  }
+
   const question = reduced ? current.question : current.question.slice(0, qLen);
   const answer = reduced ? current.answer : current.answer.slice(0, aLen);
   const done = reduced || (phase !== "question" && aLen >= current.answer.length);
-
-  const first = questions[0];
 
   return (
     <div
       role="group"
       aria-label="Sample conversation with the campus assistant"
       className="relative mx-auto w-full max-w-[440px]"
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      onFocus={() => setHovering(true)}
+      onBlur={() => setHovering(false)}
     >
-      {/* lime block behind the card */}
       <div
         aria-hidden="true"
         className="absolute inset-0 -rotate-3 translate-x-2 translate-y-3 rounded-[32px] bg-accent"
       />
 
       <div className="relative overflow-hidden rounded-[28px] bg-primary p-5 text-white shadow-xl">
-        {/* screen readers get one static example instead of the typing loop */}
-        <p className="sr-only">
-          Sample: a student asks "{first.question}" and the assistant replies "{first.answer}" with
-          the source: {first.source}.
-        </p>
+        {/* screen readers get all examples statically instead of the typing loop */}
+        <ul className="sr-only">
+          {questions.map((q) => (
+            <li key={q.question}>
+              A student asks "{q.question}" and the assistant replies "{q.answer}" Source:{" "}
+              {q.source}.
+            </li>
+          ))}
+        </ul>
 
         <div aria-hidden="true">
           {/* header */}
@@ -133,7 +165,7 @@ export function CampusAssistantPreview() {
           {/* question */}
           <div className="rounded-2xl bg-white/10 px-4 py-3">
             <p className="text-xs font-medium text-accent">You</p>
-            <p className="mt-1 min-h-6 text-sm leading-6">
+            <p className="mt-1 min-h-12 text-sm leading-6">
               {question}
               {!reduced && phase === "question" && (
                 <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-accent align-middle" />
@@ -147,7 +179,7 @@ export function CampusAssistantPreview() {
               <Sparkles className="size-3.5" />
               CampusTruth AI
             </p>
-            <p className="mt-1.5 min-h-[96px] text-[15px] leading-6 text-white/95">
+            <p className="mt-1.5 min-h-[120px] text-[15px] leading-6 text-white/95">
               {answer}
               {!reduced && phase === "answer" && (
                 <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-accent align-middle" />
@@ -161,12 +193,50 @@ export function CampusAssistantPreview() {
               done ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
             }`}
           >
-            <BadgeCheck className="size-4 shrink-0 text-accent" />
+            {current.verified ? (
+              <BadgeCheck className="size-4 shrink-0 text-accent" />
+            ) : (
+              <ShieldAlert className="size-4 shrink-0 text-white/70" />
+            )}
             <span className="text-xs text-white/70">{current.source}</span>
-            <span className="ml-auto rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
-              Verified
-            </span>
+            {current.verified ? (
+              <span className="ml-auto rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
+                Verified
+              </span>
+            ) : (
+              <span className="ml-auto whitespace-nowrap rounded-full border border-white/30 px-2.5 py-0.5 text-xs font-medium text-white/90">
+                Unconfirmed
+              </span>
+            )}
           </div>
+        </div>
+
+        {/* controls: real buttons, so keyboard users can pause or pick an example */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            {questions.map((q, i) => (
+              <button
+                key={q.question}
+                type="button"
+                onClick={() => jumpTo(i)}
+                aria-label={`Show example ${i + 1} of ${questions.length}`}
+                aria-current={i === index}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === index ? "w-6 bg-accent" : "w-1.5 bg-white/30 hover:bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+          {!reduced && (
+            <button
+              type="button"
+              onClick={() => setUserPaused((p) => !p)}
+              aria-label={userPaused ? "Play sample conversation" : "Pause sample conversation"}
+              className="flex size-7 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+            >
+              {userPaused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -209,31 +279,42 @@ export function Hero() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-primary/70 sm:text-lg lg:mx-0">
-            Verified updates, real student conversations, and an assistant that only answers from
-            official campus records.
+            Rumours spread fast on campus. CampusTruth gives you verified updates, real student
+            conversations, and an assistant that answers only from official records, or says it
+            doesn't know.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <Button
               asChild
               size="lg"
-              className="h-12 w-full rounded-full bg-accent px-7 text-base text-accent-foreground hover:bg-accent/90 sm:w-auto"
+              className="group h-12 w-full rounded-full bg-accent px-7 text-base text-accent-foreground hover:bg-accent/90 sm:w-auto"
             >
               <Link to="/auth" search={{ mode: "signup" }}>
                 Get started
+                <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
               </Link>
             </Button>
             <Button
               asChild
               size="lg"
-              variant="outline"
-              className="h-12 w-full rounded-full border-primary/20 bg-transparent px-7 text-base text-primary hover:bg-primary/5 sm:w-auto"
+              variant="ghost"
+              className="h-12 w-full rounded-full px-5 text-base text-primary hover:bg-primary/5 sm:w-auto"
             >
               <Link to="/auth" search={{ mode: "login" }}>
                 I already have an account
               </Link>
             </Button>
           </div>
+
+          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-primary/70 lg:justify-start">
+            {trustPoints.map(({ icon: Icon, label }) => (
+              <li key={label} className="flex items-center gap-2">
+                <Icon className="size-4 text-primary" aria-hidden="true" />
+                {label}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* live demo */}
